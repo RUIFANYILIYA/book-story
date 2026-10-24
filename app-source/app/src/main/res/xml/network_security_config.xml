@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Book's Story — free and open-source Material You eBook reader.
+  ~ Copyright (C) 2024-2025 Acclorite
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<!--
+  A library server lives wherever the user put it: a NAS address typed into the settings screen,
+  usually a private IP with no DNS name. A network security config can only whitelist hostnames,
+  so there is no way to permit `http://192.168.x.x` without permitting cleartext broadly.
+
+  This is a deliberate trade: the app makes no other network requests, and anyone exposing their
+  library beyond their own network is pointed at https:// both here and in the settings screen.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>

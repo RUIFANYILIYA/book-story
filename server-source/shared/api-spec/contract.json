@@ -1,0 +1,1600 @@
+{
+  "openapi": "3.1.0",
+  "specVersion": "0.2.0",
+  "operations": [
+    {
+      "operationId": "revokeDevice",
+      "method": "DELETE",
+      "path": "/api/v1/auth/devices/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteBookmark",
+      "method": "DELETE",
+      "path": "/api/v1/bookmarks/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "clearCoverOverride",
+      "method": "DELETE",
+      "path": "/api/v1/books/{bookId}/cover",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteBook",
+      "method": "DELETE",
+      "path": "/api/v1/books/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteCategory",
+      "method": "DELETE",
+      "path": "/api/v1/categories/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteCollection",
+      "method": "DELETE",
+      "path": "/api/v1/collections/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "removeCollectionBooks",
+      "method": "DELETE",
+      "path": "/api/v1/collections/{id}/books",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteTag",
+      "method": "DELETE",
+      "path": "/api/v1/tags/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "deleteUser",
+      "method": "DELETE",
+      "path": "/api/v1/users/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "listAuditLogs",
+      "method": "GET",
+      "path": "/api/v1/audit-logs",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "listDevices",
+      "method": "GET",
+      "path": "/api/v1/auth/devices",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getSelf",
+      "method": "GET",
+      "path": "/api/v1/auth/me",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "MeResponse"
+    },
+    {
+      "operationId": "listBookmarks",
+      "method": "GET",
+      "path": "/api/v1/bookmarks",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "BookmarkList"
+    },
+    {
+      "operationId": "listBooks",
+      "method": "GET",
+      "path": "/api/v1/books",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "BookPage"
+    },
+    {
+      "operationId": "getEpubChapters",
+      "method": "GET",
+      "path": "/api/v1/books/{bookId}/epub",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getBook",
+      "method": "GET",
+      "path": "/api/v1/books/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "listCategories",
+      "method": "GET",
+      "path": "/api/v1/categories",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "CategoryList"
+    },
+    {
+      "operationId": "listCollections",
+      "method": "GET",
+      "path": "/api/v1/collections",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "listCollectionBooks",
+      "method": "GET",
+      "path": "/api/v1/collections/{id}/books",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getCover",
+      "method": "GET",
+      "path": "/api/v1/covers/{bookId}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "downloadFile",
+      "method": "GET",
+      "path": "/api/v1/files/{fileId}/download",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "streamFile",
+      "method": "GET",
+      "path": "/api/v1/files/{fileId}/stream",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "getMeta",
+      "method": "GET",
+      "path": "/api/v1/meta",
+      "public": true,
+      "requestBody": null,
+      "responseSchema": "Meta"
+    },
+    {
+      "operationId": "listProgress",
+      "method": "GET",
+      "path": "/api/v1/progress",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getStats",
+      "method": "GET",
+      "path": "/api/v1/stats",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "LibraryStats"
+    },
+    {
+      "operationId": "syncDelta",
+      "method": "GET",
+      "path": "/api/v1/sync/delta",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "SyncDelta"
+    },
+    {
+      "operationId": "offlineManifest",
+      "method": "GET",
+      "path": "/api/v1/sync/offline-manifest",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "OfflineManifest"
+    },
+    {
+      "operationId": "listTags",
+      "method": "GET",
+      "path": "/api/v1/tags",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getUpload",
+      "method": "GET",
+      "path": "/api/v1/uploads/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "listUsers",
+      "method": "GET",
+      "path": "/api/v1/users",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "UserList"
+    },
+    {
+      "operationId": "getUser",
+      "method": "GET",
+      "path": "/api/v1/users/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getHealth",
+      "method": "GET",
+      "path": "/health",
+      "public": true,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "getReady",
+      "method": "GET",
+      "path": "/ready",
+      "public": true,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "headFile",
+      "method": "HEAD",
+      "path": "/api/v1/files/{fileId}/download",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "updateSelf",
+      "method": "PATCH",
+      "path": "/api/v1/auth/me",
+      "public": false,
+      "requestBody": "ProfileRequest",
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "updateBook",
+      "method": "PATCH",
+      "path": "/api/v1/books/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "updateCategory",
+      "method": "PATCH",
+      "path": "/api/v1/categories/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "updateCollection",
+      "method": "PATCH",
+      "path": "/api/v1/collections/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "reorderCollection",
+      "method": "PATCH",
+      "path": "/api/v1/collections/{id}/order",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "updateUser",
+      "method": "PATCH",
+      "path": "/api/v1/users/{id}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "login",
+      "method": "POST",
+      "path": "/api/v1/auth/login",
+      "public": true,
+      "requestBody": "LoginRequest",
+      "responseSchema": "SessionGrant"
+    },
+    {
+      "operationId": "logout",
+      "method": "POST",
+      "path": "/api/v1/auth/logout",
+      "public": true,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "changeOwnPassword",
+      "method": "POST",
+      "path": "/api/v1/auth/me/password",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "refresh",
+      "method": "POST",
+      "path": "/api/v1/auth/refresh",
+      "public": true,
+      "requestBody": null,
+      "responseSchema": "SessionGrant"
+    },
+    {
+      "operationId": "createBookmark",
+      "method": "POST",
+      "path": "/api/v1/bookmarks",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "setCoverOverride",
+      "method": "POST",
+      "path": "/api/v1/books/{bookId}/cover",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "batchCategory",
+      "method": "POST",
+      "path": "/api/v1/books/batch/category",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "batchCollection",
+      "method": "POST",
+      "path": "/api/v1/books/batch/collection",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "batchDelete",
+      "method": "POST",
+      "path": "/api/v1/books/batch/delete",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "batchStatus",
+      "method": "POST",
+      "path": "/api/v1/books/batch/status",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "batchTag",
+      "method": "POST",
+      "path": "/api/v1/books/batch/tag",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "batchUpdate",
+      "method": "POST",
+      "path": "/api/v1/books/batch/update",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "createCategory",
+      "method": "POST",
+      "path": "/api/v1/categories",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "reorderCategories",
+      "method": "POST",
+      "path": "/api/v1/categories/reorder",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "createCollection",
+      "method": "POST",
+      "path": "/api/v1/collections",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "importDirectory",
+      "method": "POST",
+      "path": "/api/v1/import/dir",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "syncPush",
+      "method": "POST",
+      "path": "/api/v1/sync/push",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "SyncPushResult"
+    },
+    {
+      "operationId": "createTag",
+      "method": "POST",
+      "path": "/api/v1/tags",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "mergeTags",
+      "method": "POST",
+      "path": "/api/v1/tags/merge",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "uploadBook",
+      "method": "POST",
+      "path": "/api/v1/uploads",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "createUser",
+      "method": "POST",
+      "path": "/api/v1/users",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "CreatedUser"
+    },
+    {
+      "operationId": "resetUserPassword",
+      "method": "POST",
+      "path": "/api/v1/users/{id}/password",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "revokeUserTokens",
+      "method": "POST",
+      "path": "/api/v1/users/{id}/tokens/revoke",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "(inline)"
+    },
+    {
+      "operationId": "addCollectionBooks",
+      "method": "PUT",
+      "path": "/api/v1/collections/{id}/books",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": null
+    },
+    {
+      "operationId": "putProgress",
+      "method": "PUT",
+      "path": "/api/v1/progress/{bookId}",
+      "public": false,
+      "requestBody": null,
+      "responseSchema": "ProgressWrite"
+    }
+  ],
+  "schemas": {
+    "AuditEntry": {
+      "name": "AuditEntry",
+      "type": "object",
+      "required": [
+        "action",
+        "at",
+        "result"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "at": {
+          "type": "string",
+          "nullable": false
+        },
+        "actor_user_id": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "action": {
+          "type": "string",
+          "nullable": false
+        },
+        "target_type": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "target_id": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "book_id": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "result": {
+          "type": "string",
+          "enum": [
+            "denied",
+            "error",
+            "ok"
+          ],
+          "nullable": false
+        },
+        "ip": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "request_id": {
+          "type": "null|string",
+          "nullable": true
+        }
+      }
+    },
+    "BatchResult": {
+      "name": "BatchResult",
+      "type": "object",
+      "required": [
+        "applied",
+        "changed",
+        "dryRun",
+        "requested",
+        "skipped"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "nullable": false
+        },
+        "changed": {
+          "type": "array",
+          "nullable": false
+        },
+        "applied": {
+          "type": "integer",
+          "nullable": false
+        },
+        "skipped": {
+          "type": "integer",
+          "nullable": false
+        },
+        "dryRun": {
+          "type": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "BookFormat": {
+      "name": "BookFormat",
+      "type": "string",
+      "required": [],
+      "additionalProperties": "unset",
+      "enum": [
+        "azw",
+        "azw3",
+        "cbz",
+        "doc",
+        "docx",
+        "epub",
+        "fb2",
+        "htmlz",
+        "kfx",
+        "mobi",
+        "pdf",
+        "txt",
+        "unknown"
+      ],
+      "properties": {}
+    },
+    "BookPage": {
+      "name": "BookPage",
+      "type": "object",
+      "required": [
+        "hasMore",
+        "items",
+        "limit",
+        "nextCursor",
+        "order",
+        "sort"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "nullable": false
+        },
+        "nextCursor": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "hasMore": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "limit": {
+          "type": "integer",
+          "nullable": false
+        },
+        "sort": {
+          "type": "string",
+          "nullable": false
+        },
+        "order": {
+          "type": "string",
+          "nullable": false
+        }
+      }
+    },
+    "BookSummary": {
+      "name": "BookSummary",
+      "type": "object",
+      "required": [
+        "authors",
+        "contentUpdatedAt",
+        "coverUrl",
+        "fileCount",
+        "formats",
+        "hasCover",
+        "id",
+        "my",
+        "needsReview",
+        "sizeBytes",
+        "title",
+        "updatedAt"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "title": {
+          "type": "string",
+          "nullable": false
+        },
+        "authors": {
+          "type": "array",
+          "nullable": false
+        },
+        "seriesName": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "seriesIndex": {
+          "type": "null|number",
+          "nullable": true
+        },
+        "year": {
+          "type": "integer|null",
+          "nullable": true
+        },
+        "language": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "categoryId": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "formats": {
+          "type": "array",
+          "nullable": false
+        },
+        "hasCover": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "coverUrl": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "coverUpdatedAt": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "updatedAt": {
+          "type": "string",
+          "nullable": false
+        },
+        "contentUpdatedAt": {
+          "type": "string",
+          "nullable": false
+        },
+        "sizeBytes": {
+          "type": "integer",
+          "nullable": false
+        },
+        "fileCount": {
+          "type": "integer",
+          "nullable": false
+        },
+        "needsReview": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "my": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "Bookmark": {
+      "name": "Bookmark",
+      "type": "object",
+      "required": [
+        "book_id",
+        "id",
+        "rev",
+        "target_kind",
+        "target_value",
+        "updated_at"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "book_id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "target_kind": {
+          "type": "string",
+          "nullable": false
+        },
+        "target_value": {
+          "type": "string",
+          "nullable": false
+        },
+        "rev": {
+          "type": "integer",
+          "nullable": false
+        },
+        "updated_at": {
+          "type": "string",
+          "nullable": false
+        },
+        "deleted_at": {
+          "type": "null|string",
+          "nullable": true
+        }
+      }
+    },
+    "BookmarkList": {
+      "name": "BookmarkList",
+      "type": "object",
+      "required": [
+        "items"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "nullable": false
+        }
+      }
+    },
+    "Capability": {
+      "name": "Capability",
+      "type": "string",
+      "required": [],
+      "additionalProperties": "unset",
+      "enum": [
+        "audit:read",
+        "batch:delete",
+        "book:delete",
+        "collections:global",
+        "file:delete",
+        "file:upload",
+        "library:edit",
+        "library:read",
+        "settings:write",
+        "storage:manage",
+        "user:manage"
+      ],
+      "properties": {}
+    },
+    "Category": {
+      "name": "Category",
+      "type": "object",
+      "required": [
+        "id",
+        "name",
+        "name_norm",
+        "path",
+        "position",
+        "slug"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "parent_id": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "name": {
+          "type": "string",
+          "nullable": false
+        },
+        "name_norm": {
+          "type": "string",
+          "nullable": false
+        },
+        "slug": {
+          "type": "string",
+          "nullable": false
+        },
+        "path": {
+          "type": "string",
+          "nullable": false
+        },
+        "position": {
+          "type": "integer",
+          "nullable": false
+        },
+        "description": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "book_count": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "CategoryList": {
+      "name": "CategoryList",
+      "type": "object",
+      "required": [
+        "items"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "nullable": false
+        }
+      }
+    },
+    "Collection": {
+      "name": "Collection",
+      "type": "object",
+      "required": [
+        "created_at",
+        "id",
+        "is_public",
+        "kind",
+        "name",
+        "position_mode",
+        "updated_at"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "owner_user_id": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "name": {
+          "type": "string",
+          "nullable": false
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "collection",
+            "smart"
+          ],
+          "nullable": false
+        },
+        "is_public": {
+          "type": "integer",
+          "nullable": false
+        },
+        "position_mode": {
+          "type": "string",
+          "enum": [
+            "added",
+            "manual",
+            "title"
+          ],
+          "nullable": false
+        },
+        "description": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "book_count": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "CreatedUser": {
+      "name": "CreatedUser",
+      "type": "object",
+      "required": [
+        "initialPassword",
+        "mustChangePassword",
+        "user"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "user": {
+          "type": "ref",
+          "nullable": false
+        },
+        "initialPassword": {
+          "type": "string",
+          "nullable": false
+        },
+        "mustChangePassword": {
+          "type": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "ErrorCode": {
+      "name": "ErrorCode",
+      "type": "string",
+      "required": [],
+      "additionalProperties": "unset",
+      "enum": [
+        "account_disabled",
+        "account_locked",
+        "already_exists",
+        "bad_request",
+        "book_not_found",
+        "capability_denied",
+        "category_not_found",
+        "collection_not_found",
+        "conflict",
+        "duplicate_book",
+        "duplicate_content",
+        "file_not_found",
+        "filename_conflict",
+        "forbidden",
+        "insufficient_storage",
+        "internal",
+        "invalid_credentials",
+        "invalid_refresh",
+        "method_not_allowed",
+        "not_found",
+        "payload_too_large",
+        "range_not_satisfiable",
+        "revision_conflict",
+        "storage_unavailable",
+        "token_reused",
+        "too_many_requests",
+        "unauthorized",
+        "unprocessable",
+        "unsupported_media_type",
+        "upgrade_required",
+        "uri_too_long",
+        "user_not_found",
+        "validation_failed"
+      ],
+      "properties": {}
+    },
+    "ErrorEnvelope": {
+      "name": "ErrorEnvelope",
+      "type": "object",
+      "required": [
+        "error"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "Id": {
+      "name": "Id",
+      "type": "string",
+      "required": [],
+      "additionalProperties": "unset",
+      "properties": {}
+    },
+    "LibraryStats": {
+      "name": "LibraryStats",
+      "type": "object",
+      "required": [
+        "books",
+        "bytes",
+        "files",
+        "needsReview"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "books": {
+          "type": "integer",
+          "nullable": false
+        },
+        "deletedBooks": {
+          "type": "integer",
+          "nullable": false
+        },
+        "files": {
+          "type": "integer",
+          "nullable": false
+        },
+        "bytes": {
+          "type": "integer",
+          "nullable": false
+        },
+        "needsReview": {
+          "type": "integer",
+          "nullable": false
+        },
+        "withoutCover": {
+          "type": "integer",
+          "nullable": false
+        },
+        "byFormat": {
+          "type": "array",
+          "nullable": false
+        },
+        "users": {
+          "type": "integer",
+          "nullable": false
+        },
+        "sessions": {
+          "type": "integer",
+          "nullable": false
+        },
+        "categories": {
+          "type": "integer",
+          "nullable": false
+        },
+        "collections": {
+          "type": "integer",
+          "nullable": false
+        },
+        "tags": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "LoginRequest": {
+      "name": "LoginRequest",
+      "type": "object",
+      "required": [
+        "password",
+        "username"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "username": {
+          "type": "string",
+          "nullable": false
+        },
+        "password": {
+          "type": "string",
+          "nullable": false
+        },
+        "device": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "MeResponse": {
+      "name": "MeResponse",
+      "type": "object",
+      "required": [
+        "capabilities",
+        "deviceId",
+        "serverTime",
+        "user"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "user": {
+          "type": "ref",
+          "nullable": false
+        },
+        "capabilities": {
+          "type": "array",
+          "nullable": false
+        },
+        "deviceId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "storageQuotaBytes": {
+          "type": "integer|null",
+          "nullable": true
+        },
+        "serverTime": {
+          "type": "string",
+          "nullable": false
+        },
+        "allowRegistration": {
+          "type": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "Meta": {
+      "name": "Meta",
+      "type": "object",
+      "required": [
+        "apiVersion",
+        "features",
+        "formats",
+        "limits",
+        "minAppVersionCode",
+        "protocol",
+        "revision",
+        "serverTime",
+        "serverVersion",
+        "upgradeRequired"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "apiVersion": {
+          "type": "string",
+          "enum": [
+            "v1"
+          ],
+          "nullable": false
+        },
+        "serverVersion": {
+          "type": "string",
+          "nullable": false
+        },
+        "revision": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "protocol": {
+          "type": "integer",
+          "nullable": false
+        },
+        "minAppVersionCode": {
+          "type": "integer",
+          "nullable": false
+        },
+        "upgradeRequired": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "serverTime": {
+          "type": "string",
+          "nullable": false
+        },
+        "features": {
+          "type": "object",
+          "nullable": false
+        },
+        "formats": {
+          "type": "object",
+          "nullable": false
+        },
+        "limits": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "OfflineManifest": {
+      "name": "OfflineManifest",
+      "type": "object",
+      "required": [
+        "books",
+        "serverTime"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "serverTime": {
+          "type": "string",
+          "nullable": false
+        },
+        "books": {
+          "type": "array",
+          "nullable": false
+        }
+      }
+    },
+    "ProfileRequest": {
+      "name": "ProfileRequest",
+      "type": "object",
+      "required": [],
+      "additionalProperties": false,
+      "properties": {
+        "username": {
+          "type": "string",
+          "nullable": false
+        },
+        "displayName": {
+          "type": "string",
+          "nullable": false
+        },
+        "email": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "prefs": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "ProgressWrite": {
+      "name": "ProgressWrite",
+      "type": "object",
+      "required": [
+        "rev",
+        "state"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "rev": {
+          "type": "integer",
+          "nullable": false
+        },
+        "state": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "PublicUser": {
+      "name": "PublicUser",
+      "type": "object",
+      "required": [
+        "createdAt",
+        "displayName",
+        "email",
+        "id",
+        "mustChangePassword",
+        "quotaBytes",
+        "role",
+        "status",
+        "updatedAt",
+        "username"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "username": {
+          "type": "string",
+          "nullable": false
+        },
+        "displayName": {
+          "type": "string",
+          "nullable": false
+        },
+        "email": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "role": {
+          "type": "string",
+          "enum": [
+            "admin",
+            "user"
+          ],
+          "nullable": false
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "disabled"
+          ],
+          "nullable": false
+        },
+        "quotaBytes": {
+          "type": "integer|null",
+          "nullable": true
+        },
+        "mustChangePassword": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "lastLoginAt": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "createdAt": {
+          "type": "string",
+          "nullable": false
+        },
+        "updatedAt": {
+          "type": "string",
+          "nullable": false
+        }
+      }
+    },
+    "SessionGrant": {
+      "name": "SessionGrant",
+      "type": "object",
+      "required": [
+        "accessToken",
+        "deviceId",
+        "expiresIn",
+        "refreshToken",
+        "tokenType",
+        "user"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "accessToken": {
+          "type": "string",
+          "nullable": false
+        },
+        "tokenType": {
+          "type": "string",
+          "enum": [
+            "Bearer"
+          ],
+          "nullable": false
+        },
+        "expiresIn": {
+          "type": "integer",
+          "nullable": false
+        },
+        "refreshToken": {
+          "type": "string",
+          "nullable": false
+        },
+        "deviceId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "user": {
+          "type": "ref",
+          "nullable": false
+        }
+      }
+    },
+    "SyncDelta": {
+      "name": "SyncDelta",
+      "type": "object",
+      "required": [
+        "hasMore",
+        "items",
+        "nextCursor",
+        "serverRev"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "nullable": false
+        },
+        "nextCursor": {
+          "type": "integer",
+          "nullable": false
+        },
+        "serverRev": {
+          "type": "integer",
+          "nullable": false
+        },
+        "hasMore": {
+          "type": "boolean",
+          "nullable": false
+        }
+      }
+    },
+    "SyncPushResult": {
+      "name": "SyncPushResult",
+      "type": "object",
+      "required": [
+        "applied",
+        "conflicts",
+        "serverRev"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "applied": {
+          "type": "array",
+          "nullable": false
+        },
+        "conflicts": {
+          "type": "array",
+          "nullable": false
+        },
+        "serverRev": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "Tag": {
+      "name": "Tag",
+      "type": "object",
+      "required": [
+        "id",
+        "kind",
+        "name",
+        "name_norm",
+        "usage_count"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "type": "ref",
+          "nullable": false
+        },
+        "name": {
+          "type": "string",
+          "nullable": false
+        },
+        "name_norm": {
+          "type": "string",
+          "nullable": false
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "genre",
+            "subject",
+            "tag"
+          ],
+          "nullable": false
+        },
+        "color": {
+          "type": "null|string",
+          "nullable": true
+        },
+        "usage_count": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    },
+    "UploadReceipt": {
+      "name": "UploadReceipt",
+      "type": "object",
+      "required": [
+        "blobId",
+        "bookId",
+        "created",
+        "deduped",
+        "fileId",
+        "format",
+        "title",
+        "uploadId"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "uploadId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "bookId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "fileId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "blobId": {
+          "type": "ref",
+          "nullable": false
+        },
+        "format": {
+          "type": "ref",
+          "nullable": false
+        },
+        "title": {
+          "type": "string",
+          "nullable": false
+        },
+        "created": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "deduped": {
+          "type": "boolean",
+          "nullable": false
+        },
+        "matchedBy": {
+          "type": "null|string",
+          "enum": [
+            null,
+            "sha256",
+            "title-author"
+          ],
+          "nullable": true
+        },
+        "book": {
+          "type": "object",
+          "nullable": false
+        }
+      }
+    },
+    "UserList": {
+      "name": "UserList",
+      "type": "object",
+      "required": [
+        "items",
+        "limit",
+        "offset",
+        "total"
+      ],
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "type": "array",
+          "nullable": false
+        },
+        "total": {
+          "type": "integer",
+          "nullable": false
+        },
+        "limit": {
+          "type": "integer",
+          "nullable": false
+        },
+        "offset": {
+          "type": "integer",
+          "nullable": false
+        }
+      }
+    }
+  }
+}

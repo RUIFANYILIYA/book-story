@@ -1,0 +1,23 @@
+{
+    "id": "02-zhanghuiti",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "第一回 甄士隐梦幻识通灵 贾雨村风尘怀闺秀",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "第二回 贾夫人仙逝扬州城 冷子兴演说荣国府",
+            "level": 1,
+            "startChar": 99
+        },
+        {
+            "title": "第三回 回首往事再续前缘",
+            "level": 1,
+            "startChar": 176
+        }
+    ],
+    "chapterCount": 3
+}

@@ -1,0 +1,16 @@
+{
+    "id": "09-false-positive-bait",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "全文",
+            "level": 1,
+            "startChar": 0
+        }
+    ],
+    "chapterCount": 1,
+    "warnings": [
+        "未识别到章节标题，将按长度切分"
+    ]
+}

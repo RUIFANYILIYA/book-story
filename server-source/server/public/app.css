@@ -1,0 +1,897 @@
+:root {
+  color-scheme: light dark;
+  --bg: #12141a;
+  --surface: #1b1e26;
+  --surface-2: #232734;
+  --line: #2f3444;
+  --text: #e8eaf0;
+  --muted: #98a0b3;
+  --accent: #6fa8dc;
+  --danger: #e0716f;
+  --ok: #7bc48a;
+  --radius: 10px;
+}
+
+* { box-sizing: border-box; }
+
+/*
+ * The `hidden` attribute only maps to the user-agent's `display: none`, so ANY rule that sets a
+ * display value defeats it — `.view { display: block }` below made every screen render at once,
+ * stacked under the login form. Declaring it here, with specificity that beats the class rules,
+ * is what makes `hidden` mean hidden no matter what else is styled.
+ */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.5 -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans CJK SC", system-ui, sans-serif;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.brand { font-weight: 700; letter-spacing: .04em; }
+.spacer { flex: 1; }
+.muted { color: var(--muted); font-size: 13px; }
+.error { color: var(--danger); min-height: 1.2em; }
+
+nav { display: flex; gap: 4px; }
+.tab, button {
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 7px 13px;
+  cursor: pointer;
+  font: inherit;
+}
+.tab.active { border-color: var(--accent); color: var(--accent); }
+button:hover:not(:disabled) { border-color: var(--accent); }
+button:disabled { opacity: .45; cursor: not-allowed; }
+button.ghost { background: transparent; }
+button.danger { border-color: var(--danger); color: var(--danger); }
+
+main { padding: 18px; max-width: 1400px; margin: 0 auto; }
+.view { display: block; }
+.two-col { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 16px; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+.card h1 { font-size: 17px; margin: 0 0 12px; }
+
+label { display: block; margin-bottom: 10px; font-size: 14px; color: var(--muted); }
+label.check { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+input, select, textarea {
+  width: 100%;
+  margin-top: 4px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: inherit;
+}
+label.check input { width: auto; margin: 0; }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.row > input, .row > select { flex: 1 1 160px; width: auto; margin: 0; }
+.row > label.check { flex: 0 0 auto; }
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.toolbar > input[type="search"] { flex: 1 1 240px; width: auto; margin: 0; }
+.toolbar > select { width: auto; margin: 0; }
+
+.batchbar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  position: sticky;
+  top: 58px;
+  z-index: 10;
+}
+.batchbar input, .batchbar select { width: auto; margin: 0; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 14px;
+}
+
+.item {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+}
+.item.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.item .cover {
+  aspect-ratio: 2 / 3;
+  background: var(--surface-2);
+  display: block;
+  object-fit: cover;
+  width: 100%;
+}
+.item .meta { padding: 8px 10px 10px; }
+.item .title {
+  font-size: 13px;
+  font-weight: 600;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.item .sub { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.badges { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+.badge {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+}
+.badge.warn { border-color: var(--danger); color: var(--danger); }
+.item .pick {
+  position: absolute;
+  inset: 6px 6px auto auto;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+}
+body.batching .item .pick { display: flex; }
+.pick input { width: auto; margin: 0; }
+
+.tree { list-style: none; padding-left: 0; margin: 0; }
+.tree li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+}
+.tree li:hover { background: var(--surface-2); }
+.tree .count { color: var(--muted); font-size: 12px; }
+.tree li { flex-wrap: nowrap; }
+.tree .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tree .count { white-space: nowrap; }
+.tree li button { flex: 0 0 auto; }
+.tree .child { margin-left: 18px; }
+/* A root row starts a group; its sub-categories hang under it with a visible tick. */
+.tree li.root { margin-top: 8px; }
+.tree li.root:first-child { margin-top: 0; }
+.tree .child .name::before { content: '└ '; color: var(--muted); }
+
+.uploads { display: grid; gap: 8px; margin-top: 12px; }
+.upload-row { display: grid; grid-template-columns: 1fr 4fr auto; gap: 10px; align-items: center; font-size: 13px; }
+.progress { height: 6px; background: var(--surface-2); border-radius: 999px; overflow: hidden; }
+.progress > i { display: block; height: 100%; background: var(--accent); width: 0; }
+.upload-row.ok .progress > i { background: var(--ok); }
+.upload-row.bad .progress > i { background: var(--danger); }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { color: var(--muted); font-weight: 500; font-size: 13px; }
+
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: 14px; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; }
+
+.log {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.drawer {
+  position: fixed;
+  inset: 0 0 0 auto;
+  width: min(520px, 100%);
+  background: var(--surface);
+  border-left: 1px solid var(--line);
+  padding: 18px;
+  overflow: auto;
+  /* Above the sub-shelf panel (45): a book opened from inside a folder still gets its drawer. */
+  z-index: 50;
+}
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 26px;
+  transform: translateX(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  z-index: 40;
+  max-width: 90vw;
+}
+.toast.bad { border-color: var(--danger); }
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f5f8;
+    --surface: #ffffff;
+    --surface-2: #eceef4;
+    --line: #d8dbe4;
+    --text: #1c1f27;
+    --muted: #5d6577;
+    --accent: #2f6fa8;
+    --danger: #b23c3a;
+    --ok: #2f7a45;
+  }
+}
+
+/* ---------------------------------------------------------------- shelf tabs and folder tiles
+ * The app's library is a row of shelf tabs over a grid, with sub-shelves drawn as folders of books.
+ * The console copies both shapes on purpose: the same shelf should look the same in either place,
+ * so switching between the phone and this page does not mean re-learning where things are.
+ */
+
+.shelf-tabs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.shelf-tab {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 5px 14px;
+  white-space: nowrap;
+}
+.shelf-tab.active { border-color: var(--accent); color: var(--accent); }
+
+.crumbs { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-size: 13px; }
+.crumbs .crumb { background: transparent; border: 0; color: var(--accent); padding: 2px 0; }
+.crumbs .crumb-sep { color: var(--muted); }
+.crumbs .current { color: var(--muted); }
+
+/*
+ * A folder is a 3x3 wall of the covers it holds, in the same footprint as a book.
+ *
+ * It used to be two offset sheets with a single cover in front, which at shelf distance read as
+ * "one book with a shadow" — the count badge was the only clue that it held more. Nine covers say
+ * it without a label, and the empty slots keep the 3x3 honest for folders with fewer than nine.
+ * The cell is 2:3, so every slot is 2:3 too: the same shape as a book cover.
+ */
+.item.folder { position: relative; }
+.item.folder .folder-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 2px;
+  padding: 2px;
+  aspect-ratio: 2 / 3;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+.item.folder .folder-slot {
+  border-radius: 3px;
+  overflow: hidden;
+  background-color: var(--surface-2);
+  background-size: cover;
+  background-position: center;
+}
+.item.folder .folder-slot.empty {
+  /* A recess, not a card: the empty slots have to recede behind the covers, or a two-book folder
+     reads as a grid of white boxes with two pictures in it. */
+  background-color: color-mix(in srgb, var(--line) 55%, var(--surface-2));
+}
+.item.folder .folder-slot.fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: var(--muted);
+}
+.item.folder .folder-count {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  /* Small on purpose: it sits on top of the ninth cover, so it has to be a stamp, not a label. */
+  font-size: 10px;
+  padding: 1px 6px;
+  background: var(--accent);
+  color: var(--bg);
+  border-radius: 999px;
+}
+.item.folder .folder-actions {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: none;
+  gap: 4px;
+}
+.item.folder:hover .folder-actions,
+.item.folder:focus-within .folder-actions { display: flex; }
+.item.folder .folder-actions button {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-size: 11px;
+  padding: 2px 6px;
+}
+
+/* --- matching the app's library, second pass ------------------------------------------------
+ * Covers sit straight on the page with the title underneath; there is no bordered card around each
+ * one. The chips that used to sit under every title move onto the cover, in the corner the app uses
+ * for reading progress. Together these two are most of what made the console look like a different
+ * product.
+ */
+
+.grid .item {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  overflow: visible;
+  padding: 0;
+}
+.item.selected { box-shadow: none; }
+
+.cover-frame {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--surface-2);
+}
+.item .cover-frame .cover { display: block; width: 100%; border-radius: 0; }
+
+.item .meta { padding: 7px 2px 0; }
+.item .title { font-weight: 500; }
+
+.item .badges {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  margin: 0;
+  max-width: calc(100% - 12px);
+}
+.item .badge {
+  background: var(--surface);
+  background: color-mix(in srgb, var(--surface) 86%, transparent);
+  border-color: transparent;
+  color: var(--text);
+}
+.item.selected .cover-frame { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.item.folder .folder-grid { border-radius: 10px; }
+
+.shelf-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+}
+.shelf-tab .tab-count { font-size: 12px; opacity: .75; }
+.shelf-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+.shelf-tab.active .tab-count { opacity: .85; }
+
+/* The count rides in its own chip inside the tab, the way the app's tabs show it. */
+.shelf-tab .tab-count {
+  background: var(--surface-2);
+  border-radius: 999px;
+  padding: 0 7px;
+  line-height: 18px;
+}
+.shelf-tab.active .tab-count {
+  background: color-mix(in srgb, var(--bg) 22%, transparent);
+  color: var(--bg);
+  opacity: 1;
+}
+
+/* Compact toolbar: same controls, one tight row, so the shelf below starts where the app's does. */
+.toolbar { gap: 6px; margin-bottom: 10px; }
+.toolbar > input,
+.toolbar > select,
+.toolbar > button { padding: 4px 9px; font-size: 13px; }
+.toolbar > input[type="search"] { flex: 1 1 200px; }
+
+/* Badges wait for a hover: the covers then read exactly like the app's, and the chips are still
+   one gesture away while organising. Touch devices get them permanently, since there is no hover. */
+.item .badges { opacity: 0; transition: opacity .12s ease; }
+.item:hover .badges,
+.item:focus-within .badges { opacity: 1; }
+@media (hover: none) {
+  .item .badges { opacity: 1; }
+}
+
+/* The console build stamp in the header: small, quiet, and enough to tell a stale page apart. */
+.topbar .build { font-size: 12px; opacity: .8; }
+
+/* --- quick create -------------------------------------------------------------------------
+ * A "＋ 新建" button sitting at the end of the shelf tabs: the shelf you are looking at decides what
+ * it can create, so the menu needs no navigation to the 整理 page first.
+ */
+
+.shelf-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+.shelf-bar .shelf-tabs {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-bottom: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+.shelf-create { position: relative; flex: 0 0 auto; }
+.shelf-create > button { white-space: nowrap; }
+
+.menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  min-width: 210px;
+  padding: 6px;
+  display: grid;
+  gap: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  box-shadow: 0 10px 26px rgb(0 0 0 / 0.22);
+}
+.menu button {
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 7px 10px;
+  border-radius: 6px;
+  white-space: nowrap;
+}
+.menu button:hover:not(:disabled) { background: var(--surface-2); }
+
+/* --- dialogs ---------------------------------------------------------------------------------
+ * Replaces window.prompt/confirm: same questions, but drawn by the console, so they follow the
+ * theme, do not block the tab, and cannot be suppressed by the browser's "prevent more dialogs".
+ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgb(0 0 0 / 0.45);
+}
+.modal-card {
+  width: min(440px, 100%);
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 0.3);
+}
+.modal-card h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.modal-card p { margin: 0; line-height: 1.6; }
+.modal-card input { margin-top: 0; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+.modal-actions button { min-width: 78px; }
+
+/* Stacked answers for a three-way question (the upload name clash). Full width, left-aligned
+   text: each line explains a consequence, so they read as a list of choices, not as buttons
+   racing to the right edge. */
+.modal-choices { display: grid; gap: 8px; margin-top: 4px; }
+.modal-choices button {
+  min-width: 0;
+  padding: 10px 12px;
+  text-align: left;
+  line-height: 1.5;
+  white-space: normal;
+}
+
+/* Reorder arrows on a category row: a tight pair, disabled at the ends of the level. */
+.tree .move { display: inline-flex; gap: 2px; flex: 0 0 auto; }
+.tree .move button {
+  min-width: 26px;
+  padding: 2px 6px;
+  line-height: 1.2;
+  color: var(--muted);
+}
+.tree .move button:disabled { opacity: .3; }
+
+
+/* --- dragging a shelf tab --------------------------------------------------------------------
+ * The tab lifts off the row and follows the pointer; a thin accent bar shows the slot it will land
+ * in. The strip is the same one the app uses, so reordering here and reordering in the app's
+ * category list write the same `position` column.
+ */
+
+.shelf-tab {
+  position: relative;
+  cursor: grab;
+  user-select: none;
+  touch-action: pan-x;
+}
+.shelf-tabs.reordering { cursor: grabbing; }
+.shelf-tab.dragging {
+  z-index: 5;
+  cursor: grabbing;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.28);
+  opacity: .95;
+}
+.shelf-tabs.reordering .shelf-tab:not(.dragging) { transition: box-shadow .12s ease; }
+
+.shelf-tab.drop-before::before,
+.shelf-tab.drop-after::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  width: 2px;
+  border-radius: 2px;
+  background: var(--accent);
+}
+.shelf-tab.drop-before::before { left: -6px; }
+.shelf-tab.drop-after::after { right: -6px; }
+
+
+/* --- reader -----------------------------------------------------------------------------------
+ * A full-screen overlay with its own palette. The three themes are deliberately independent of the
+ * console's light/dark: reading happens for a long time at a stretch, and the choice belongs to the
+ * text, not to the operating system.
+ */
+
+.reader {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  background: var(--reader-bg);
+  color: var(--reader-fg);
+}
+.reader[data-theme="paper"] {
+  --reader-bg: #f6f6f3;
+  --reader-fg: #22252c;
+  --reader-muted: #6f7686;
+  --reader-line: #e3e3dd;
+  --reader-panel: #fbfbf9;
+  --reader-accent: #3f6fa8;
+  --reader-hover: #ecece6;
+}
+.reader[data-theme="sepia"] {
+  --reader-bg: #f3ead6;
+  --reader-fg: #3a3025;
+  --reader-muted: #8a7a63;
+  --reader-line: #e2d5bb;
+  --reader-panel: #faf3e4;
+  --reader-accent: #9a6b34;
+  --reader-hover: #ece0c8;
+}
+.reader[data-theme="night"] {
+  --reader-bg: #14161b;
+  --reader-fg: #c8ccd6;
+  --reader-muted: #7c8393;
+  --reader-line: #262a33;
+  --reader-panel: #1a1d24;
+  --reader-accent: #6fa8dc;
+  --reader-hover: #22262f;
+}
+
+body.reading { overflow: hidden; }
+/* The shelf behind the panel must not scroll while the panel is up. */
+body.sub-shelf-open { overflow: hidden; }
+
+/* The console's button colours belong to the dark chrome; inside the reader they are re-derived
+   from the reader's own palette, or every control would be a dark chip on paper. */
+.reader button {
+  background: transparent;
+  border: 1px solid var(--reader-line);
+  color: var(--reader-fg);
+  padding: 5px 10px;
+  font-size: 13px;
+}
+.reader button:hover:not(:disabled) { border-color: var(--reader-accent); color: var(--reader-accent); }
+.reader button:disabled { opacity: .38; cursor: default; }
+
+.reader-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: var(--reader-panel);
+  border-bottom: 1px solid var(--reader-line);
+  flex: 0 0 auto;
+}
+.reader-heading { flex: 1 1 auto; min-width: 0; }
+.reader-book {
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reader-chapter {
+  font-size: 12px;
+  color: var(--reader-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.reader-percent {
+  font-variant-numeric: tabular-nums;
+  color: var(--reader-muted);
+  font-size: 13px;
+  min-width: 3.6em;
+  text-align: right;
+}
+
+.reader-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 34px 20px 90px;
+}
+.reader-text {
+  max-width: 38em;
+  margin: 0 auto;
+  font-family: "Songti SC", "SimSun", "Noto Serif CJK SC", Georgia, serif;
+  font-size: var(--reader-font, 19px);
+  line-height: 1.95;
+}
+.reader-text p { margin: 0 0 .55em; text-indent: 2em; }
+/* EPUB chapters arrive as blocks, so the reader styles the few tags the extractor emits rather
+   than assuming every chapter is one flat run of paragraphs. */
+.reader-text h1, .reader-text h2, .reader-text h3,
+.reader-text h4, .reader-text h5, .reader-text h6 {
+  font-size: 1.06em;
+  font-weight: 600;
+  margin: 1.1em 0 .55em;
+  text-indent: 0;
+}
+.reader-text h1, .reader-text h2 { font-size: 1.16em; }
+.reader-text blockquote {
+  margin: .7em 0;
+  padding-left: .9em;
+  border-left: 3px solid var(--reader-line);
+  color: var(--reader-muted);
+  text-indent: 0;
+}
+.reader-text blockquote p { text-indent: 0; }
+.reader-text ul, .reader-text ol { margin: .4em 0 .9em; padding-left: 1.6em; }
+.reader-text li { margin: .2em 0; }
+.reader-text hr { border: 0; border-top: 1px solid var(--reader-line); margin: 1.4em 0; }
+.reader-text em { font-style: italic; }
+.reader-text strong { font-weight: 700; }
+.reader-text code, .reader-text pre {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-size: .92em;
+}
+.reader-text pre { white-space: pre-wrap; overflow-x: auto; text-indent: 0; }
+.reader-title {
+  font-size: 1.12em;
+  font-weight: 600;
+  text-align: center;
+  margin: 0 0 1.3em;
+  letter-spacing: .04em;
+}
+.reader-hint { text-indent: 0; color: var(--reader-muted); }
+.reader-hint.error { color: #c2554f; }
+
+.reader-end {
+  max-width: 38em;
+  margin: 34px auto 0;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.reader-foot { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; }
+.reader-foot i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: var(--reader-accent);
+  transition: width .15s linear;
+}
+
+.reader-toc {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  width: min(340px, 82vw);
+  display: flex;
+  flex-direction: column;
+  background: var(--reader-panel);
+  border-left: 1px solid var(--reader-line);
+  box-shadow: -12px 0 30px rgb(0 0 0 / .18);
+}
+.reader-toc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--reader-line);
+  font-weight: 600;
+}
+.reader-toc ol { list-style: none; margin: 0; padding: 4px 0 40px; overflow-y: auto; }
+.reader-toc li {
+  display: flex;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.reader-toc li:hover { background: var(--reader-hover); }
+.reader-toc li.current { background: var(--reader-hover); color: var(--reader-accent); font-weight: 600; }
+.reader-toc .toc-index {
+  color: var(--reader-muted);
+  font-variant-numeric: tabular-nums;
+  min-width: 2.2em;
+  text-align: right;
+}
+.reader-toc .toc-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* "阅读" on a cover: one gesture to open the book, without the detail drawer in between. */
+.cover-frame .read-chip {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  opacity: 0;
+  transition: opacity .12s ease;
+  border: 0;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  background: rgb(0 0 0 / .58);
+  color: #fff;
+}
+.cover-frame .read-chip:hover { background: var(--accent); color: #10141b; }
+.item:hover .read-chip,
+.item:focus-within .read-chip { opacity: 1; }
+@media (hover: none) {
+  .cover-frame .read-chip { opacity: 1; }
+}
+
+/* "删除" on a cover, mirrored to the left of "阅读". Red on hover on purpose: it sits where a
+   thumb reaches for the reader chip, so the two must never look alike. */
+.cover-frame .delete-chip {
+  position: absolute;
+  left: 8px;
+  bottom: 8px;
+  opacity: 0;
+  transition: opacity .12s ease;
+  border: 0;
+  border-radius: 999px;
+  padding: 3px 11px;
+  font-size: 12px;
+  background: rgb(0 0 0 / .58);
+  color: #fff;
+}
+.cover-frame .delete-chip:hover { background: var(--danger); color: #fff; }
+.item:hover .delete-chip,
+.item:focus-within .delete-chip { opacity: 1; }
+@media (hover: none) {
+  .cover-frame .delete-chip { opacity: 1; }
+}
+
+button.primary { background: var(--accent); border-color: var(--accent); color: #10141b; font-weight: 600; }
+button.primary:hover:not(:disabled) { filter: brightness(1.08); color: #10141b; }
+
+/* Narrow screens: the reader bar has seven controls, so it wraps instead of overflowing. The title
+   gets its own row above them. */
+@media (max-width: 720px) {
+  .reader-bar { flex-wrap: wrap; row-gap: 6px; }
+  .reader-heading { order: -1; flex-basis: 100%; }
+  .reader-scroll { padding: 22px 14px 80px; }
+  .reader-text { font-size: var(--reader-font, 18px); }
+}
+
+
+/* --- sub-shelf panel --------------------------------------------------------------------------
+ * The folder opens upwards instead of replacing the grid: the shelf stays behind the scrim, so
+ * closing the panel puts you back where you were rather than at the top of a different list.
+ */
+
+.sub-shelf-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: flex;
+  align-items: flex-end;
+}
+.sub-shelf-sheet .scrim {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / .45);
+  opacity: 0;
+  transition: opacity .22s ease;
+}
+.sub-shelf-sheet.open .scrim { opacity: 1; }
+
+.sub-shelf-panel {
+  position: relative;
+  width: 100%;
+  max-height: 86vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  border-top: 1px solid var(--line);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -18px 48px rgb(0 0 0 / .3);
+  transform: translateY(100%);
+  transition: transform .26s cubic-bezier(.2, .8, .2, 1);
+}
+.sub-shelf-sheet.open .sub-shelf-panel { transform: translateY(0); }
+
+.sub-shelf-grip {
+  width: 42px;
+  height: 4px;
+  margin: 8px auto 2px;
+  border-radius: 2px;
+  background: var(--line);
+}
+.sub-shelf-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.sub-shelf-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.sub-shelf-head button { align-self: center; }
+
+.sub-shelf-books {
+  overflow-y: auto;
+  padding: 14px 18px 28px;
+}
+.sub-shelf-empty { grid-column: 1 / -1; padding: 24px 0; }

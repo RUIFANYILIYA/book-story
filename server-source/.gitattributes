@@ -1,0 +1,36 @@
+# Normalize line endings: this repo is LF everywhere.
+* text=auto eol=lf
+
+# Windows needs CRLF for batch files.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Never touch binary payloads.
+*.jar binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.zip binary
+*.keystore binary
+*.jks binary
+*.apk binary
+*.dex binary
+*.bin binary
+
+# Test corpora: ebook samples must not be re-encoded.
+*.epub binary
+*.pdf binary
+*.cbz binary
+*.mobi binary
+*.azw3 binary
+*.fb2 text -diff
+*.txt text
+
+*.md text eol=lf trailing_space=-whitespace

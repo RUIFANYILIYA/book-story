@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Cleartext HTTP is permitted because the server address is user input, and the
+  documented default deployment is a NAS on the reader's own LAN speaking plain
+  HTTP on port 8787. `network_security_config.xml` can only whitelist *fixed*
+  domains, so there is no way to express "whatever IP the user typed" without
+  allowing cleartext generally. Two consequences, both handled elsewhere:
+
+    * The sign-in and shelf screens show an "unencrypted" badge while the base URL
+      is http, so the exposure is stated rather than implied (see ServerSetupScreen).
+    * The HTTPS path is fully implemented — switching is a URL change, not a code
+      change — and the deployment guide recommends a reverse proxy or WireGuard.
+
+  Debug builds additionally trust user-installed CAs, which is what makes a
+  self-signed certificate testable on a device without weakening release builds.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+
+    <debug-overrides>
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+</network-security-config>

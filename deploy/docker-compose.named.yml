@@ -1,0 +1,76 @@
+# ============================================================================
+# ebookd 服务端 · 命名卷版 Compose（= 你 NAS 上现有部署的完整备份）
+#
+# 这份和你 NAS 上正在跑的项目配置完全一致（挂载、环境变量一一对应）。
+# 平时升级不需要用它——直接重新部署现有项目即可（见升级指南）。
+# 只有在项目损坏需要重建时，才把这份粘回去；重建时保持"项目名"和原来一致，
+# 卷才会自动指回旧数据（卷名实际是 <项目名>_ebookd_db 这种带前缀的形式）。
+#
+# ⚠️ 已脱敏：公开仓库不保存真实密钥。重建前必须填回下面三个值
+#    （EBOOK_JWT_SECRET / EBOOK_MASTER_KEY / EBOOK_ADMIN_PASSWORD），
+#    你的真实值保存在 deploy/.env（git 忽略，不会上传）。
+#    特别注意 EBOOK_MASTER_KEY 换值会导致已加密的书打不开，务必填原值。
+# ============================================================================
+
+services:
+  ebookd:
+    image: ebookd:0.2.0
+    container_name: ebookd
+    restart: unless-stopped
+    init: true
+    ports:
+      - "0.0.0.0:8787:8787"
+    environment:
+      NODE_ENV: production
+      EBOOK_PORT: "8787"
+      EBOOK_HOST: 0.0.0.0
+      EBOOK_DATA_DIR: /data/db
+      EBOOK_LIBRARY_DIR: /data/library
+      EBOOK_IMPORT_DIR: /data/library/imports
+      # —— 监听文件夹（可选）——
+      # 启用后，放进挂载目录的书会被「原地引用」：不复制、不移动、不删除，只记录路径。
+      # 用法：把下面两行取消注释，并在 volumes 里取消注释对应的 :ro 挂载，重新部署即可。
+      # EBOOK_WATCH_DIR: /data/watch
+      # EBOOK_WATCH_INTERVAL: "60"
+      # —— 密钥（已脱敏，填回真实值，见文件头）——
+      EBOOK_JWT_SECRET: ""
+      EBOOK_MASTER_KEY: ""
+      EBOOK_ADMIN_USER: "admin"
+      EBOOK_ADMIN_PASSWORD: ""
+      EBOOK_ALLOW_REGISTRATION: "false"
+      EBOOK_MAX_UPLOAD_MB: "512"
+      EBOOK_FILE_RETENTION_DAYS: "7"
+      EBOOK_SWEEP_INTERVAL_HOURS: "6"
+      EBOOK_TRUST_PROXY: "false"
+      EBOOK_LOG_LEVEL: "info"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ebookd_db:/data/db
+      - ebookd_library:/data/library
+      - ebookd_imports:/data/library/imports
+      # —— 监听文件夹（可选，配合上面的 EBOOK_WATCH_DIR）——
+      # 改成你 NAS 上放书的文件夹。只读挂载是关键：服务端物理上改不了你的文件。
+      # - /volume1/你的书库:/data/watch:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # 遇到 SQLITE_CANTOPEN 时的兜底：取消注释以 root 运行
+    # user: "0:0"
+
+volumes:
+  ebookd_db:
+  ebookd_library:
+  ebookd_imports:

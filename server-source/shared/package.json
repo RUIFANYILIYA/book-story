@@ -1,0 +1,15 @@
+{
+  "name": "@ebookd/shared",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Wire contract (OpenAPI) and cross-language test fixtures shared by the TS server and the Kotlin reader.",
+  "scripts": {
+    "typecheck": "node --check scripts/gen-manifest.mjs && node --check scripts/contract-check.mjs",
+    "contract:gen": "node scripts/gen-manifest.mjs",
+    "contract:check": "node scripts/contract-check.mjs"
+  },
+  "devDependencies": {
+    "yaml": "^2.9.0"
+  }
+}

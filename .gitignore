@@ -1,0 +1,40 @@
+# ============================================================
+#  book-story 交付包 — 根 .gitignore
+#  （app-source / server-source 内各自的 .gitignore 仍然有效）
+# ============================================================
+
+# ---- 依赖与构建产物 ----
+node_modules/
+dist/
+build/
+.gradle/
+.kotlin/
+.cxx/
+*.iml
+
+# ---- 本地配置（含本机 SDK 路径）----
+local.properties
+.idea/
+
+# ---- 签名密钥：永远不要进 git ----
+*.jks
+*.keystore
+keystore/
+
+# ---- 大二进制发布件：随 GitHub Release 分发，不进 git 历史 ----
+apk/
+image/
+
+# ---- 运行时数据与密钥 ----
+/data/                 # 服务端运行库（EBOOK_DATA_DIR / EBOOK_LIBRARY_DIR）
+*.db
+*.db-wal
+*.db-shm
+*.sqlite*
+.env
+!.env.example
+
+# ---- 系统 / 编辑器 ----
+.DS_Store
+Thumbs.db
+desktop.ini

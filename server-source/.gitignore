@@ -1,0 +1,58 @@
+# --- Node ---
+node_modules/
+dist/
+*.tsbuildinfo
+.npm/
+coverage/
+.nyc_output/
+
+# --- Runtime state (never commit a library or a database) ---
+# Scoped to the repository root on purpose: a bare `data/` also matches source packages called
+# `data` (android/core/.../core/data), which silently excluded SettingsStore.kt from a commit
+# and left the tree building only because the file was still on disk.
+/data/
+server/data/
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+server/keys/
+*.pem
+*.key
+
+# --- Secrets: commit only the .example files ---
+.env
+.env.*
+!.env.example
+!*.env.example
+deploy/.env
+
+# --- Android / Gradle ---
+android/.gradle/
+android/**/build/
+android/local.properties
+android/captures/
+android/**/*.apk
+android/**/*.aab
+android/**/*.keystore
+android/**/*.jks
+.kotlin/
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Logs / scratch ---
+*.log
+logs/
+tmp/
+.cache/
+*.orig
+*.rej

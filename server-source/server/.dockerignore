@@ -1,0 +1,41 @@
+# Build context is the repository root. Everything here is excluded from what the daemon receives,
+# which matters for two different reasons: sending a multi-gigabyte node_modules or library
+# directory makes every build slow, and copying a developer's data/ directory into an image would
+# bake their library into a layer.
+
+# Installed and rebuilt inside the image.
+node_modules
+**/node_modules
+server/dist
+
+# Runtime state — never part of an image.
+data
+server/data
+*.sqlite3
+*.sqlite3-wal
+*.sqlite3-shm
+
+# Secrets.
+.env
+.env.*
+!.env.example
+**/*.pem
+**/*.key
+server/keys
+
+# Not needed to build the server.
+.git
+.github
+android
+docs
+deploy
+*.md
+!README.md
+
+# Editors and OS noise.
+.idea
+.vscode
+*.iml
+.DS_Store
+Thumbs.db
+*.log

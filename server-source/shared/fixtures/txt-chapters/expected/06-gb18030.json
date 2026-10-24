@@ -1,0 +1,23 @@
+{
+    "id": "06-gb18030",
+    "splitMode": "AUTO",
+    "charset": "GB18030",
+    "chapters": [
+        {
+            "title": "第一章 渡口",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "第二章 灯塔",
+            "level": 1,
+            "startChar": 73
+        },
+        {
+            "title": "第三章 归航",
+            "level": 1,
+            "startChar": 132
+        }
+    ],
+    "chapterCount": 3
+}

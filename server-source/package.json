@@ -1,0 +1,30 @@
+{
+  "name": "ebookd",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Self-hosted ebook library (Docker) + Android reader. Server side of the monorepo.",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "shared",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w server",
+    "start": "npm run start -w server",
+    "build": "npm run build -w server",
+    "typecheck": "npm run typecheck -w server && npm run typecheck -w shared",
+    "test": "npm run test -w server",
+    "test:watch": "npm run test:watch -w server",
+    "format": "prettier --write \"server/**/*.{ts,json}\" \"shared/**/*.{ts,mjs,json,yaml}\" \"*.md\"",
+    "contract:gen": "node shared/scripts/gen-manifest.mjs",
+    "contract:check": "node shared/scripts/contract-check.mjs",
+    "smoke": "npm run build -w server && npm run smoke -w server",
+    "verify": "npm run typecheck && npm run contract:check && npm run test && npm run smoke"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

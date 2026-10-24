@@ -1,0 +1,26 @@
+{
+    "id": "04-toc-with-pagenum",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "第一章 起风",
+            "level": 1,
+            "startChar": 62
+        },
+        {
+            "title": "第二章 落雨",
+            "level": 1,
+            "startChar": 118
+        },
+        {
+            "title": "第三章 转晴",
+            "level": 1,
+            "startChar": 168
+        }
+    ],
+    "chapterCount": 3,
+    "warnings": [
+        "检测到目录区（第 1–5 行），已从正文中排除"
+    ]
+}

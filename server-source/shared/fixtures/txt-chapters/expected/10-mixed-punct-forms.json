@@ -1,0 +1,23 @@
+{
+    "id": "10-mixed-punct-forms",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "第一章：起风",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "第 一 章 ： 落雨",
+            "level": 1,
+            "startChar": 55
+        },
+        {
+            "title": "（一）转晴",
+            "level": 3,
+            "startChar": 113
+        }
+    ],
+    "chapterCount": 3
+}

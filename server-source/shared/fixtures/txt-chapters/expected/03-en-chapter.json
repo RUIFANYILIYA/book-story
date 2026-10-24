@@ -1,0 +1,23 @@
+{
+    "id": "03-en-chapter",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "Chapter 1",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "Book 2",
+            "level": 1,
+            "startChar": 268
+        },
+        {
+            "title": "Epilogue",
+            "level": 1,
+            "startChar": 430
+        }
+    ],
+    "chapterCount": 3
+}

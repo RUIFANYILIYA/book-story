@@ -1,0 +1,28 @@
+{
+    "id": "01-wangwen-diyi",
+    "splitMode": "AUTO",
+    "charset": "UTF-8",
+    "chapters": [
+        {
+            "title": "第0章 楔子",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "第一章 风雪夜",
+            "level": 1,
+            "startChar": 70
+        },
+        {
+            "title": "第二章 渡口",
+            "level": 1,
+            "startChar": 134
+        },
+        {
+            "title": "第三章 归途",
+            "level": 1,
+            "startChar": 193
+        }
+    ],
+    "chapterCount": 4
+}

@@ -1,0 +1,102 @@
+# Run from the repository root:
+#   docker compose -f deploy/docker-compose.yml up --build -d
+#
+# Relative paths in this file resolve against *this file's* directory, so the build context below
+# is the repository root one level up, and `.env` is read from deploy/.
+name: ebookd
+
+services:
+  ebookd:
+    build:
+      context: ..
+      dockerfile: server/Dockerfile
+    image: ebookd:0.2.0
+    container_name: ebookd
+    restart: unless-stopped
+    init: true
+    ports:
+      # Bind to 0.0.0.0 so phones on the LAN can reach it. On a NAS with a reverse proxy in front,
+      # set EBOOK_BIND=127.0.0.1 here and let the proxy handle TLS and exposure.
+      - "${EBOOK_BIND:-0.0.0.0}:${EBOOK_PORT:-8787}:8787"
+    environment:
+      NODE_ENV: production
+      EBOOK_PORT: "8787"
+      EBOOK_HOST: 0.0.0.0
+      EBOOK_DATA_DIR: /data/db
+      EBOOK_LIBRARY_DIR: /data/library
+      EBOOK_IMPORT_DIR: /data/library/imports
+      # Required. `:?` makes a missing value a startup failure rather than a server that boots
+      # quietly with a development key — which on a LAN-reachable port is an open door.
+      EBOOK_JWT_SECRET: "${EBOOK_JWT_SECRET:?set EBOOK_JWT_SECRET in deploy/.env — see .env.example}"
+      EBOOK_MASTER_KEY: "${EBOOK_MASTER_KEY:?set EBOOK_MASTER_KEY in deploy/.env — see .env.example}"
+      EBOOK_ADMIN_USER: "${EBOOK_ADMIN_USER:-admin}"
+      # Consumed once, only when the database has no users yet. Delete the line afterwards.
+      EBOOK_ADMIN_PASSWORD: "${EBOOK_ADMIN_PASSWORD:-}"
+      EBOOK_ALLOW_REGISTRATION: "${EBOOK_ALLOW_REGISTRATION:-false}"
+      EBOOK_MAX_UPLOAD_MB: "${EBOOK_MAX_UPLOAD_MB:-512}"
+      # How long a deleted book's bytes stay on the volume before the retention sweep reclaims
+      # them, and how often that sweep runs. Both are pure disk-versus-safety trade-offs; on a
+      # small NAS volume, lowering the first is the lever.
+      EBOOK_FILE_RETENTION_DAYS: "${EBOOK_FILE_RETENTION_DAYS:-7}"
+      EBOOK_SWEEP_INTERVAL_HOURS: "${EBOOK_SWEEP_INTERVAL_HOURS:-6}"
+      # Set true only behind a trusted reverse proxy; otherwise client IPs come from X-Forwarded-*
+      # that any caller can forge, which matters for the login lockout.
+      EBOOK_TRUST_PROXY: "${EBOOK_TRUST_PROXY:-false}"
+      EBOOK_LOG_LEVEL: "${EBOOK_LOG_LEVEL:-info}"
+      TZ: "${TZ:-Asia/Shanghai}"
+    volumes:
+      # Named volumes, never a bind mount to /mnt/c or a Windows share: SQLite's WAL needs working
+      # advisory locks, and on a 9p/SMB share it does not have them — the failure mode is a
+      # corrupted database, not a slow one.
+      - ebookd_db:/data/db
+      - ebookd_library:/data/library
+      # Bulk import folder. Writable because a completed import *moves* files into the
+      # content-addressed store; a read-only mount would make that impossible.
+      - ebookd_imports:/data/library/imports
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # The first start runs migrations and seeds the bootstrap admin before it listens.
+      start_period: 25s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    # No CPU or memory cap by default: a cover batch or a large import legitimately spikes briefly.
+    # On a shared NAS, uncomment and tune.
+    # deploy:
+    #   resources:
+    #     limits:
+    #       memory: 1g
+    #       cpus: "2.0"
+
+  # Optional TLS terminator. Uncomment together with EBOOK_BIND=127.0.0.1 above and set the domain
+  # in deploy/Caddyfile. This is the recommended shape if the server is reachable from outside the
+  # LAN at all — plain HTTP with a password over the internet is not a configuration to leave in
+  # place.
+  # caddy:
+  #   image: caddy:2-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+  #   depends_on:
+  #     - ebookd
+
+volumes:
+  ebookd_db:
+  ebookd_library:
+  ebookd_imports:
+  # caddy_data:
+  # caddy_config:

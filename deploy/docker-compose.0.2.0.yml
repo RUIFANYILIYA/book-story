@@ -1,0 +1,64 @@
+# ============================================================================
+# ebookd 服务端 · 部署用 Compose（已脱敏 — 公开仓库不保存真实密钥）
+#
+# 部署或重建项目前，必须把下面三个值填回真实值：
+#   EBOOK_JWT_SECRET     openssl rand -base64 32
+#   EBOOK_MASTER_KEY     openssl rand -base64 32
+#                       ⚠️ 换值会导致已加密的书文件全部打不开，务必填回原值
+#   EBOOK_ADMIN_PASSWORD 管理员密码（仅数据库为空时生效）
+# 你的真实值保存在 deploy/.env（该文件被 git 忽略，不会上传）。
+# 正常升级不需要动本文件——重新部署 NAS 上现有项目即可，见《升级指南》。
+# ============================================================================
+services:
+  ebookd:
+    image: ebookd:0.2.0
+    container_name: ebookd
+    restart: unless-stopped
+    init: true
+    ports:
+      - "0.0.0.0:8787:8787"
+    environment:
+      NODE_ENV: production
+      EBOOK_PORT: "8787"
+      EBOOK_HOST: 0.0.0.0
+      EBOOK_DATA_DIR: /data/db
+      EBOOK_LIBRARY_DIR: /data/library
+      EBOOK_IMPORT_DIR: /data/library/imports
+      EBOOK_WATCH_DIR: /data/watch
+      EBOOK_WATCH_INTERVAL: "60"
+      # —— 密钥（已脱敏，填回真实值，见文件头）——
+      EBOOK_JWT_SECRET: ""
+      EBOOK_MASTER_KEY: ""
+      EBOOK_ADMIN_USER: "admin"
+      EBOOK_ADMIN_PASSWORD: ""
+      EBOOK_ALLOW_REGISTRATION: "false"
+      EBOOK_MAX_UPLOAD_MB: "512"
+      EBOOK_FILE_RETENTION_DAYS: "7"
+      EBOOK_SWEEP_INTERVAL_HOURS: "6"
+      EBOOK_TRUST_PROXY: "false"
+      EBOOK_LOG_LEVEL: "info"
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ebookd_db:/data/db
+      - ebookd_library:/data/library
+      - ebookd_imports:/data/library/imports
+      - /volume4/docker/book:/data/watch:ro
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+volumes:
+  ebookd_db:
+  ebookd_library:
+  ebookd_imports:

@@ -1,0 +1,90 @@
+# ============================================================================
+# ebookd 电子书库服务端 · 共享文件夹版 Compose（备用）
+#
+# 适用：第 0 步检查发现数据挂在共享文件夹（/volume1/...）时才用这个文件。
+# 升级现有项目不需要换 compose——直接重新部署原项目即可，volumes 原样保留。
+#
+# 用法（新建项目时）：NAS 的 Docker 应用 →【项目】→【创建】→ 粘贴本文件全文
+# 数据位置：/volume1/docker/ebookd/db（数据库）和 /volume1/docker/ebookd/library（书库）
+#
+# ⚠️ 已脱敏：公开仓库不保存真实密钥。新建项目前必须先生成并填回
+#    EBOOK_JWT_SECRET / EBOOK_MASTER_KEY（各执行一次 openssl rand -base64 32）。
+#    这两个值一旦启用就不要更换——换 EBOOK_MASTER_KEY 会导致已加密的书文件打不开，
+#    换 EBOOK_JWT_SECRET 会导致所有设备需要重新登录。
+# ============================================================================
+
+services:
+  ebookd:
+    image: ebookd:0.2.0
+    container_name: ebookd
+    restart: unless-stopped
+    init: true
+    ports:
+      # 浏览器与手机都通过 http://NAS的IP:8787 访问
+      - "8787:8787"
+    environment:
+      NODE_ENV: production
+      EBOOK_PORT: "8787"
+      EBOOK_HOST: 0.0.0.0
+      EBOOK_DATA_DIR: /data/db
+      EBOOK_LIBRARY_DIR: /data/library
+      EBOOK_IMPORT_DIR: /data/library/imports
+      # —— 监听文件夹（可选）——
+      # 启用后，放进挂载目录的书会被「原地引用」：不复制、不移动、不删除，只记录路径。
+      # 用法：取消下面两行 + volumes 里对应的 :ro 挂载，重新部署。
+      # EBOOK_WATCH_DIR: /data/watch
+      # EBOOK_WATCH_INTERVAL: "60"
+
+      # ---- 密钥（已脱敏：新建项目时用 openssl rand -base64 32 生成后填回）----
+      EBOOK_JWT_SECRET: ""
+      EBOOK_MASTER_KEY: ""
+
+      # 管理员账号只在"数据库为空"时按这里创建一次。
+      # 本次是迁移现有书库（数据库里已有 admin 账号），留空即可，用原密码登录。
+      EBOOK_ADMIN_USER: admin
+      EBOOK_ADMIN_PASSWORD: ""
+
+      EBOOK_ALLOW_REGISTRATION: "false"
+      EBOOK_MAX_UPLOAD_MB: "512"
+
+      # 删除/替换掉的书，字节在盘上保留多少天才回收。NAS 空间紧张可改成 1~3。
+      EBOOK_FILE_RETENTION_DAYS: "7"
+      EBOOK_SWEEP_INTERVAL_HOURS: "6"
+
+      # 只有确认前面有受信任的反向代理时才设 "true"，否则不要开。
+      EBOOK_TRUST_PROXY: "false"
+      EBOOK_LOG_LEVEL: info
+      TZ: Asia/Shanghai
+
+    volumes:
+      # SQLite 数据库。/volume1 是 NAS 本地存储池（不是 SMB 网络共享），
+      # WAL 锁可正常工作；切勿把这里改成 SMB/网络盘挂载，否则数据库会损坏。
+      - /volume1/docker/ebookd/db:/data/db
+      # 书库：原文件、封面、tmp、trash、imports（批量导入落地目录）。
+      # 挂到共享文件夹后，往 imports 里丢书、用文件管理器备份都很方便。
+      - /volume1/docker/ebookd/library:/data/library
+      # —— 监听文件夹（可选，配合上面的 EBOOK_WATCH_DIR）——
+      # 改成你 NAS 上放书的文件夹。只读挂载是关键：服务端物理上改不了你的文件。
+      # - /volume1/你的书库:/data/watch:ro
+
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      # 首次启动要跑迁移校验和种子数据，给足时间
+      start_period: 25s
+
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # ---- 仅当遇到 SQLITE_CANTOPEN / 权限报错时的兜底写法 ----
+    # 取消下面两行注释，容器会以 root 运行，绕过共享文件夹属主问题：
+    # user: "0:0"

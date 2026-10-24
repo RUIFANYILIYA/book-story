@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug builds sit next to a release build on the same device, so the launcher label has to
+         tell them apart: the two share an icon otherwise. -->
+    <string name="app_name" translatable="false">Book\'s Story 子书架版</string>
+</resources>

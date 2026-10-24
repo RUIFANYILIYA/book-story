@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ebookd 管理</title>
+    <link rel="stylesheet" href="/admin/app.css" />
+  </head>
+  <body>
+    <!--
+      The admin console is a static page with no build step and no framework. It talks to the same
+      /api/v1 the Android app uses, which is the point: if a screen here cannot be built from the
+      public API, the API is missing something the app will need too, and that shows up now rather
+      than during app development.
+    -->
+    <header class="topbar">
+      <span class="brand">ebookd</span>
+      <!-- A visible build stamp, because "the browser is showing me the old console" is otherwise
+           indistinguishable from "the server is still running the old code". Bump it with the
+           assets whenever this folder changes. -->
+      <span class="muted build">控制台 2026-10-22</span>
+      <nav id="tabs" hidden>
+        <button data-view="shelf" class="tab active">书架</button>
+        <button data-view="upload" class="tab">上传</button>
+        <button data-view="organize" class="tab">分类 / 分组</button>
+        <button data-view="users" class="tab">用户</button>
+        <button data-view="status" class="tab">状态</button>
+        <button data-view="account" class="tab">账户</button>
+      </nav>
+      <span class="spacer"></span>
+      <span id="whoami" class="muted"></span>
+      <button id="logout" class="ghost" hidden>退出</button>
+    </header>
+
+    <main>
+      <section id="view-login" class="view">
+        <form id="login-form" class="card">
+          <h1>登录</h1>
+          <label>用户名<input name="username" autocomplete="username" required /></label>
+          <label>密码<input name="password" type="password" autocomplete="current-password" required /></label>
+          <button type="submit">进入</button>
+          <p id="login-error" class="error" role="alert"></p>
+        </form>
+      </section>
+
+      <section id="view-shelf" class="view" hidden>
+        <div class="toolbar">
+          <input id="search" type="search" placeholder="搜索书名、作者、标签" />
+          <select id="sort">
+            <option value="addedAt">最近添加</option>
+            <option value="title">书名</option>
+            <option value="author">作者</option>
+            <option value="year">出版年</option>
+            <option value="size">体积</option>
+            <option value="lastRead">最近阅读</option>
+          </select>
+          <select id="filter-category"><option value="">全部分类</option></select>
+          <select id="filter-collection"><option value="">全部分组</option></select>
+          <label class="check"><input id="filter-review" type="checkbox" /> 待确认</label>
+          <span class="spacer"></span>
+          <span id="shelf-count" class="muted"></span>
+          <button id="batch-toggle" class="ghost" disabled>批量</button>
+        </div>
+
+        <div id="batch-bar" class="batchbar" hidden>
+          <span id="batch-count">已选 0 本</span>
+          <input id="batch-tags" placeholder="标签，逗号分隔" />
+          <button data-batch="tag">打标签</button>
+          <select id="batch-collection"><option value="">选择分组…</option></select>
+          <button data-batch="collection">加入分组</button>
+          <select id="batch-category"><option value="">选择分类…</option></select>
+          <button data-batch="category">移动分类</button>
+          <button data-batch="delete" class="danger">删除</button>
+          <span class="spacer"></span>
+          <button id="batch-clear" class="ghost">取消选择</button>
+        </div>
+
+        <div class="shelf-bar">
+          <div id="shelf-tabs" class="shelf-tabs"></div>
+          <div class="shelf-create">
+            <button id="create-toggle" class="ghost">＋ 新建</button>
+            <div id="create-menu" class="menu" hidden>
+              <button id="create-shelf">新建书架</button>
+              <button id="create-sub-shelf">新建子书架</button>
+            </div>
+          </div>
+        </div>
+        <div id="shelf-crumbs" class="crumbs" hidden></div>
+        <div id="shelf" class="grid"></div>
+        <button id="more" class="ghost" hidden>加载更多</button>
+      </section>
+
+      <section id="view-upload" class="view" hidden>
+        <div class="card">
+          <h1>上传电子书</h1>
+          <p class="muted">
+            支持 EPUB / TXT / PDF / MOBI / AZW3 / FB2 / CBZ / DOCX。服务端按内容识别格式，
+            不信任扩展名；同内容的文件会被识别为重复而不是存两份。
+          </p>
+          <input id="upload-file" type="file" multiple accept=".epub,.txt,.pdf,.mobi,.azw,.azw3,.fb2,.cbz,.docx,.htmlz" />
+          <div id="upload-list" class="uploads"></div>
+        </div>
+        <div class="card">
+          <h1>从服务器目录导入</h1>
+          <p class="muted">适合把已经在 NAS 上的整批文件收进来。</p>
+          <label>目录路径（相对导入根目录）<input id="import-path" placeholder="例如 novels/2026" /></label>
+          <label class="check">
+            <input id="import-link" type="checkbox" />
+            原地引用（不移动、不复制文件，适合只读挂载的文件夹）
+          </label>
+          <div class="row">
+            <button id="import-preview" class="ghost">预览</button>
+            <button id="import-run">开始导入</button>
+          </div>
+          <pre id="import-result" class="log" hidden></pre>
+        </div>
+      </section>
+
+      <section id="view-organize" class="view" hidden>
+        <div class="card">
+          <h1>分类</h1>
+          <p class="muted">
+            分类只有两层：可以单独成架，也可以挂在某个分类下作为子分类（App 里显示成子书架）。
+            父分类的本数包含其子分类的书。
+          </p>
+          <div class="row">
+            <input id="category-name" placeholder="新分类名称" />
+            <select id="category-parent"><option value="">作为根分类</option></select>
+            <button id="category-add">添加</button>
+          </div>
+          <ul id="category-list" class="tree"></ul>
+        </div>
+        <div class="two-col">
+          <div class="card">
+            <h1>分组</h1>
+            <div class="row">
+              <input id="collection-name" placeholder="新分组名称" />
+              <label class="check"><input id="collection-shared" type="checkbox" /> 共享给所有人</label>
+              <button id="collection-add">添加</button>
+            </div>
+            <ul id="collection-list" class="tree"></ul>
+          </div>
+          <div class="card">
+            <h1>标签</h1>
+            <div class="row">
+              <input id="tag-name" placeholder="新标签名称" />
+              <button id="tag-add">添加</button>
+            </div>
+            <ul id="tag-list" class="tree"></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-users" class="view" hidden>
+        <div class="card">
+          <h1>用户</h1>
+          <div class="row">
+            <input id="user-name" placeholder="用户名" />
+            <input id="user-display" placeholder="显示名" />
+            <input id="user-password" type="text" placeholder="初始密码（至少 10 位）" />
+            <select id="user-role">
+              <option value="user">普通用户</option>
+              <option value="admin">管理员</option>
+            </select>
+            <button id="user-add">创建</button>
+          </div>
+          <p class="muted">初始密码只显示这一次，服务端不保存明文。</p>
+          <table id="user-table">
+            <thead>
+              <tr><th>用户名</th><th>角色</th><th>状态</th><th>会话</th><th></th></tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="view-status" class="view" hidden>
+        <div class="two-col">
+          <div class="card">
+            <h1>运行状态</h1>
+            <dl id="status-dl" class="kv"></dl>
+          </div>
+          <div class="card">
+            <h1>操作日志</h1>
+            <pre id="audit" class="log"></pre>
+          </div>
+        </div>
+      </section>
+      <section id="view-account" class="view" hidden>
+        <div class="two-col">
+          <form id="account-form" class="card">
+            <h1>登录名与显示名</h1>
+            <label>用户名<input name="username" autocomplete="username" required /></label>
+            <label>显示名<input name="displayName" autocomplete="nickname" required /></label>
+            <p class="muted">用户名是登录时输入的那个，2-64 位，可用中英文、数字和 . _ @ -。改名不影响已登录的设备。</p>
+            <button type="submit">保存</button>
+          </form>
+          <form id="password-form" class="card">
+            <h1>修改密码</h1>
+            <label>当前密码<input name="currentPassword" type="password" autocomplete="current-password" required /></label>
+            <label>新密码<input name="newPassword" type="password" autocomplete="new-password" minlength="10" required /></label>
+            <p class="muted">新密码至少 10 位。保存后其它设备会被登出，这台不会。</p>
+            <button type="submit">修改密码</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <aside id="detail" class="drawer" hidden>
+      <button id="detail-close" class="ghost">关闭</button>
+      <div id="detail-body"></div>
+    </aside>
+
+    <!--
+      The reader is an overlay rather than a view: it is entered from a book, not from the tab
+      bar, and while it is open nothing else on the console should be reachable.
+    -->
+    <div id="reader" class="reader" data-theme="paper" hidden>
+      <header class="reader-bar">
+        <button id="reader-back" class="ghost" title="返回书架（Esc）">← 书架</button>
+        <div class="reader-heading">
+          <div id="reader-book" class="reader-book">载入中…</div>
+          <div id="reader-chapter" class="reader-chapter"></div>
+        </div>
+        <span id="reader-percent" class="reader-percent">0%</span>
+        <button id="reader-toc-toggle" class="ghost" title="目录（T）">目录</button>
+        <button id="reader-font-down" class="ghost" title="缩小字号">A－</button>
+        <button id="reader-font-up" class="ghost" title="放大字号">A＋</button>
+        <button id="reader-theme" class="ghost" title="切换底色">纸白</button>
+      </header>
+
+      <div id="reader-scroll" class="reader-scroll">
+        <article id="reader-text" class="reader-text"></article>
+        <div id="reader-end" class="reader-end" hidden>
+          <button id="reader-prev" class="ghost">上一章</button>
+          <button id="reader-next">下一章</button>
+        </div>
+      </div>
+
+      <div class="reader-foot"><i id="reader-bar"></i></div>
+
+      <aside id="reader-toc" class="reader-toc" hidden>
+        <div class="reader-toc-head">
+          <span>目录</span>
+          <button id="reader-toc-close" class="ghost">×</button>
+        </div>
+        <ol id="reader-toc-list"></ol>
+      </aside>
+    </div>
+
+    <!--
+      A sub-shelf opened as a panel that slides up from the bottom, the same gesture as in the app:
+      the shelf stays behind it, so closing it returns you exactly where you were.
+    -->
+    <div id="sub-shelf" class="sub-shelf-sheet" hidden>
+      <div class="scrim" data-close="1"></div>
+      <div class="sub-shelf-panel" role="dialog" aria-modal="true" aria-labelledby="sub-shelf-title">
+        <div class="sub-shelf-grip"></div>
+        <header class="sub-shelf-head">
+          <h2 id="sub-shelf-title"></h2>
+          <span id="sub-shelf-count" class="muted"></span>
+          <span class="spacer"></span>
+          <button id="sub-shelf-close" class="ghost">关闭</button>
+        </header>
+        <div id="sub-shelf-books" class="grid sub-shelf-books"></div>
+      </div>
+    </div>
+
+    <div id="modal" class="modal" hidden>
+      <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <h2 id="modal-title"></h2>
+        <p id="modal-text" class="muted" hidden></p>
+        <input id="modal-input" hidden />
+        <!-- Three-way answers (the upload name clash) stack here; the single-answer row below is
+             hidden while this one shows, so a dialog never offers two different questions. -->
+        <div id="modal-choices" class="modal-choices" hidden></div>
+        <div id="modal-actions" class="modal-actions">
+          <button id="modal-cancel" class="ghost">取消</button>
+          <button id="modal-ok">确定</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast" class="toast" hidden></div>
+
+    <script src="/admin/app.js" type="module"></script>
+  </body>
+</html>

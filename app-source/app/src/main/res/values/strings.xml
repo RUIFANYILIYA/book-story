@@ -1,0 +1,782 @@
+<!--
+  ~ Book's Story — free and open-source Material You eBook reader.
+  ~ Copyright (C) 2024-2025 Acclorite
+  ~ SPDX-License-Identifier: GPL-3.0-only
+  -->
+
+<resources>
+    <!-- Basic Strings -->
+    <string name="app_name" translatable="false">Book\'s Story</string>
+    <string name="default_string">Default</string>
+
+    <!-- Screens -->
+    <string name="library_screen">Library</string>
+    <string name="history_screen">History</string>
+    <string name="browse_screen">Browse</string>
+    <string name="settings_screen">Settings</string>
+    <string name="about_screen">About app</string>
+    <string name="help_screen">Help</string>
+
+    <!-- Dialog Labels -->
+    <string name="add_books">Add books?</string>
+    <string name="delete_books">Delete books?</string>
+    <string name="delete_book">Delete book?</string>
+    <string name="delete_history">Delete reading history?</string>
+    <string name="remove_category">Remove shelf?</string>
+
+    <!-- Dialog Descriptions -->
+    <string name="add_books_description">
+        You can choose which books you want to add.
+        You can edit Title and Cover image of the book later.
+        The loading process can take up to several minutes.
+    </string>
+    <string name="delete_books_description">
+        It will delete all selected books(%1$s) from the database.
+        It will not delete selected books from your device.
+    </string>
+    <string name="delete_book_description">
+        It will delete this book from the database.
+        It will not delete this book from your device.
+    </string>
+    <string name="delete_history_description">
+        It will delete the whole history from the database.
+        After deleting the whole history, the order of the books will be reset.
+    </string>
+    <string name="remove_category_description">
+        This will remove this shelf from the Library but will not delete any books.
+    </string>
+
+    <!-- Errors -->
+    <string name="error_no_description">No description.</string>
+    <string name="error_something_went_wrong">Something went wrong.</string>
+    <string name="error_no_translator">No translator app found.</string>
+    <string name="error_no_dictionary">No dictionary app found.</string>
+    <string name="error_no_browser">No browser app found.</string>
+    <string name="error_no_share_app">No app to share found.</string>
+    <string name="error_no_file_manager_app">No app to choose folder found.</string>
+    <string name="error_could_not_get_text">
+        File is empty, missing, or inaccessible.
+        Verify the file, scan settings or change the path, then try again.
+    </string>
+    <string name="error_could_not_reset_cover">Could not reset cover image.</string>
+    <string name="error_closed_source">Closed source</string>
+    <string name="error_no_file">File does not exist or inaccessible</string>
+    <string name="error_field_empty">This field should not be empty.</string>
+
+    <!-- Is Empty messages -->
+    <string name="search_field_empty">
+        Search…
+    </string>
+    <string name="browse_empty">
+        Expand the library\'s book collection with your downloads
+    </string>
+    <string name="library_empty">
+        Read your favorite books and sort them between categories
+    </string>
+    <string name="history_empty">
+        Let your last book you read open the pages of a new great story of your reading journey
+    </string>
+    <string name="categories_empty">No shelves.</string>
+
+    <!-- Query strings -->
+    <string name="selected_items_count_query">%1$s selected</string>
+    <string name="color_preset_query">Preset %1$s</string>
+    <string name="color_preset_selected_query">Selected «%1$s»</string>
+
+    <!-- Action Texts -->
+    <string name="cancel">Cancel</string>
+    <string name="add_book">Add a book</string>
+    <string name="move">Move</string>
+    <string name="delete">Delete</string>
+    <string name="never">Never</string>
+    <string name="undo">Undo</string>
+    <string name="copy">Copy</string>
+    <string name="report">Report</string>
+    <string name="translate">Translate</string>
+    <string name="dictionary">Dictionary</string>
+    <string name="next">Next</string>
+    <string name="yes_go_to_help">Yes, go to Help</string>
+    <string name="no">No</string>
+    <string name="done">Done</string>
+    <string name="web_search">Web search</string>
+    <string name="share">Share</string>
+    <string name="ok">OK</string>
+    <string name="change_path">Change path</string>
+    <string name="add_folder">Add folder</string>
+    <string name="edit">Edit</string>
+    <string name="create_category">Create shelf</string>
+    <string name="create_sub_shelf">New sub-shelf</string>
+    <string name="edit_sub_shelf">Edit sub-shelf</string>
+    <string name="delete_sub_shelf">Delete</string>
+    <string name="sub_shelf_name">Sub-shelf name</string>
+    <string name="library_sub_shelf_all">All</string>
+    <string name="arrange_shelf">Arrange shelf</string>
+    <string name="arrange_shelf_content_desc">Arrange shelf</string>
+    <string name="arrange_shelf_done_content_desc">Done arranging</string>
+    <string name="arrange_shelf_hint">Long-press a book and drag it onto another one to make a sub-shelf out of the pair.</string>
+    <string name="combine_sub_shelf">New sub-shelf</string>
+    <string name="combine_sub_shelf_description">%1$s and %2$s go into it together.</string>
+    <string name="sub_shelf_book_count">%1$d books</string>
+    <string name="sub_shelf_empty">This folder is empty</string>
+    <string name="exit_sub_shelf_content_desc">Back to shelf</string>
+    <string name="set_up_scanning">Set up scanning</string>
+
+    <!-- Book -->
+    <string name="unknown_author">Unknown</string>
+    <string name="reset_cover">Reset cover image</string>
+    <string name="reset_cover_desc">Reset cover image of the book to the default</string>
+    <string name="change_cover">Change cover image</string>
+    <string name="change_cover_desc">Choose new cover from your photos</string>
+    <string name="delete_cover">Delete cover image</string>
+    <string name="delete_cover_desc">Delete current cover image of the book</string>
+    <string name="author">Author</string>
+
+    <!-- Tabs -->
+    <string name="default_tab">Default</string>
+    <string name="general_tab">General</string>
+    <string name="display_tab">Display</string>
+    <string name="color_tab">Colors</string>
+    <string name="filter_tab">Filter</string>
+    <string name="sort_tab">Sort</string>
+    <string name="reader_tab">Reader</string>
+
+    <!-- Settings categories -->
+    <string name="general_settings">General</string>
+    <string name="general_settings_desc">App language</string>
+    <string name="appearance_settings">Appearance</string>
+    <string name="appearance_settings_desc">Theme, colors</string>
+    <string name="reader_settings">Reader</string>
+    <string name="reader_settings_desc">Font, text</string>
+    <string name="browse_settings">Browse</string>
+    <string name="browse_settings_desc">Scan, display</string>
+    <string name="library_settings">Library</string>
+    <string name="library_settings_desc">Shelves, display, tabs</string>
+
+    <!-- Settings subcategories -->
+    <string name="font_reader_settings">Font</string>
+    <string name="text_reader_settings">Text</string>
+    <string name="translator_reader_settings">Translator</string>
+    <string name="padding_reader_settings">Margins</string>
+    <string name="misc_reader_settings">Misc</string>
+    <string name="reading_speed_reader_settings">Reading speed</string>
+    <string name="reading_mode_reader_settings">Reading mode</string>
+    <string name="reading_mode_option">Page turning</string>
+    <string name="reading_mode_scroll">Vertical scroll</string>
+    <string name="reading_mode_page">Left/right pages</string>
+    <string name="reader_paginating">Splitting into pages %1$d%%…</string>
+    <string name="system_reader_settings">System</string>
+    <string name="chapters_reader_settings">Chapters</string>
+    <string name="images_reader_settings">Images</string>
+    <string name="progress_reader_settings">Progress</string>
+    <string name="theme_appearance_settings">Theme preferences</string>
+    <string name="colors_appearance_settings">Colors</string>
+    <string name="scan_browse_settings">Scan</string>
+    <string name="display_settings">Display</string>
+    <string name="tabs_settings">Tabs</string>
+    <string name="categories_settings">Shelves</string>
+    <string name="filter_browse_settings">Filter</string>
+    <string name="sort_settings">Sort</string>
+
+    <!-- Settings notes -->
+    <string name="browse_scan_option_note">
+        These folders are used to scan and retrieve files in the Browse.
+        Removing a folder here will not delete actual files or books from the Library.
+        To revoke access, click the corresponding button.
+    </string>
+    <string name="library_categories_option_note">
+        Initially, books are added to the default shelf,
+        but can belong to several custom shelves created here.
+        Removing a shelf here will not delete books from the Library.
+        Hold and move the shelf icon to rearrange the shelves.
+    </string>
+    <string name="library_per_category_sort_option_note">
+        Sorting can be changed in the Library.
+    </string>
+
+    <!-- Settings options -->
+    <!-- General -->
+    <string name="language_option">App language</string>
+    <string name="dark_theme_option">Dark theme</string>
+    <string name="pure_dark_option">Pure dark</string>
+    <string name="absolute_dark_option">Absolute dark</string>
+    <string name="absolute_dark_option_desc">Change background color to be completely black</string>
+    <string name="theme_contrast_option">Theme contrast</string>
+    <string name="app_theme_option">App theme</string>
+    <string name="double_press_exit_option">Double back press to exit</string>
+    <string name="double_press_exit_option_desc">Press back twice to exit the app</string>
+
+    <!-- Reader -->
+    <string name="font_family_option">Font family</string>
+    <string name="font_thickness_option">Font thickness</string>
+    <string name="font_style_option">Font style</string>
+    <string name="font_size_option">Font size</string>
+    <string name="line_height_option">Line height</string>
+    <string name="paragraph_height_option">Paragraph spacing</string>
+    <string name="paragraph_indentation_option">Paragraph indentation</string>
+    <string name="color_preset_option">Color preset</string>
+    <string name="background_color_option">Background color</string>
+    <string name="font_color_option">Font color</string>
+    <string name="side_padding_option">Side margins</string>
+    <string name="vertical_padding_option">Vertical margins</string>
+    <string name="double_click_translation_option">Double click translation</string>
+    <string name="double_click_translation_option_desc">Double click on paragraph to translate it</string>
+    <string name="fast_color_preset_change_option">Fast color preset change</string>
+    <string name="fast_color_preset_change_option_desc">Swipe top bar left or right to change color preset</string>
+    <string name="text_alignment_option">Text alignment</string>
+    <string name="chapter_title_alignment_option">Chapter title alignment</string>
+    <string name="chapter_splitting_option">Split TXT into chapters</string>
+    <string name="chapter_splitting_automatic">Automatic</string>
+    <string name="chapter_splitting_off">Off</string>
+    <string name="letter_spacing_option">Letter spacing</string>
+    <string name="cutout_padding_option">Cutout margin</string>
+    <string name="cutout_padding_option_desc">Apply margin to the cutout area</string>
+    <string name="fullscreen_option">Fullscreen</string>
+    <string name="fullscreen_option_desc">Hide system bars and margins</string>
+    <string name="keep_screen_on_option">Keep screen on</string>
+    <string name="volume_key_paging_option">Volume keys turn pages</string>
+    <string name="hide_bars_on_fast_scroll_option">Hide bars on fast scroll</string>
+    <string name="perception_expander_option">Perception expander</string>
+    <string name="perception_expander_option_desc">
+        Increase your reading speed by focusing on center
+    </string>
+    <string name="perception_expander_padding_option">Line side margin</string>
+    <string name="perception_expander_thickness_option">Line thickness</string>
+    <string name="screen_orientation_option">Screen orientation</string>
+    <string name="custom_screen_brightness_option">Custom brightness</string>
+    <string name="screen_brightness_option">Brightness</string>
+    <string name="horizontal_gesture_option">Horizontal gesture</string>
+    <string name="horizontal_gesture_scroll_option">Scroll fraction</string>
+    <string name="horizontal_gesture_sensitivity_option">Sensitivity</string>
+    <string name="horizontal_gesture_alpha_anim_option">Visibility animation</string>
+    <string name="horizontal_gesture_alpha_anim_option_desc">
+        Enable visibility animation when using horizontal gesture
+    </string>
+    <string name="horizontal_gesture_pull_anim_option">Pull animation</string>
+    <string name="horizontal_gesture_pull_anim_option_desc">
+        Enable pull animation when using horizontal gesture
+    </string>
+    <string name="bottom_bar_padding_option">Bottom bar margin</string>
+    <string name="highlighted_reading_option">Highlight words</string>
+    <string name="highlighted_reading_option_desc">Highlight the beginning of each word</string>
+    <string name="highlighted_reading_thickness_option">Highlight thickness</string>
+    <string name="images_option">Images</string>
+    <string name="images_option_desc">Display images</string>
+    <string name="images_captions_option">Captions</string>
+    <string name="images_captions_option_desc">Display captions under images</string>
+    <string name="images_corners_roundness_option">Corners roundness</string>
+    <string name="images_alignment_option">Alignment</string>
+    <string name="images_width_option">Size</string>
+    <string name="images_color_effects_option">Color effects</string>
+    <string name="progress_bar_option">Progress bar</string>
+    <string name="progress_bar_option_desc">Display progress bar at the bottom</string>
+    <string name="progress_bar_padding_option">Margins</string>
+    <string name="progress_bar_alignment_option">Alignment</string>
+    <string name="progress_bar_font_size_option">Font size</string>
+    <string name="progress_count_option">Progress count</string>
+
+    <!-- Library -->
+    <string name="read_button_option">Show «Read» button</string>
+    <string name="show_progress_option">Show progress</string>
+    <string name="title_position_option">Title position</string>
+    <string name="show_book_count_option">Show book count</string>
+    <string name="show_category_tabs_option">Show shelf tabs</string>
+    <string name="always_show_default_tab_option">Always show default tab</string>
+    <string name="per_category_sort_option">Per-shelf sort</string>
+
+    <!-- Color presets -->
+    <string name="red_color">Red</string>
+    <string name="green_color">Green</string>
+    <string name="blue_color">Blue</string>
+    <string name="color_preset_placeholder">Name a preset…</string>
+
+    <!-- Dark Theme properties -->
+    <string name="dark_theme_off">Disabled</string>
+    <string name="dark_theme_on">Enabled</string>
+    <string name="dark_theme_follow_system">System</string>
+
+    <!-- Pure Dark properties -->
+    <string name="pure_dark_off">Disabled</string>
+    <string name="pure_dark_on">Enabled</string>
+    <string name="pure_dark_power_saver">Saver</string>
+
+    <!-- Theme Contrast properties -->
+    <string name="theme_contrast_standard">Standard</string>
+    <string name="theme_contrast_medium">Medium</string>
+    <string name="theme_contrast_high">High</string>
+
+    <!-- Font Style properties -->
+    <string name="font_style_italic">Italic</string>
+    <string name="font_style_normal">Normal</string>
+
+    <!-- Library Title Position properties -->
+    <string name="library_title_position_off">Hidden</string>
+    <string name="library_title_position_below">Below</string>
+    <string name="library_title_position_inside">Inside</string>
+
+    <!-- Library Categories properties -->
+    <string name="library_categories_create_category_placeholder">Title</string>
+
+    <!-- Layout properties -->
+    <string name="layout_option">Display mode</string>
+    <string name="layout_list">List</string>
+    <string name="layout_grid">Grid</string>
+
+    <!-- Sort Order properties -->
+    <string name="sort_order_name">Alphabetically</string>
+    <string name="sort_order_file_format">File format</string>
+    <string name="sort_order_last_modified">Last modified</string>
+    <string name="sort_order_file_size">File size</string>
+    <string name="sort_order_last_read">Last read</string>
+    <string name="sort_order_progress">Progress</string>
+    <string name="sort_order_author">Author</string>
+
+    <!-- Grid Size properties -->
+    <string name="grid_size_option">Grid size</string>
+    <string name="grid_size_auto">Auto</string>
+    <string name="grid_size_per_row">per row</string>
+
+    <!-- Alignment properties -->
+    <string name="alignment_start">Start</string>
+    <string name="alignment_justify">Justify</string>
+    <string name="alignment_center">Center</string>
+    <string name="alignment_end">End</string>
+
+    <!-- Screen Orientation properties -->
+    <string name="screen_orientation_free">Free</string>
+    <string name="screen_orientation_portrait">Portrait</string>
+    <string name="screen_orientation_landscape">Landscape</string>
+    <string name="screen_orientation_locked_portrait">Locked portrait</string>
+    <string name="screen_orientation_locked_landscape">Locked landscape</string>
+
+    <!-- Horizontal Gesture properties -->
+    <string name="horizontal_gesture_off">Off</string>
+    <string name="horizontal_gesture_on">On</string>
+    <string name="horizontal_gesture_inverse">On (Inverse)</string>
+
+    <!-- Highlighted Reading properties -->
+    <string name="highlighted_reading_level">level</string>
+
+    <!-- Color Effect properties -->
+    <string name="color_effects_off">Off</string>
+    <string name="color_effects_grayscale">Grayscale</string>
+    <string name="color_effects_font">Font color</string>
+    <string name="color_effects_background">Background color</string>
+
+    <!-- Font Thickness properties -->
+    <string name="font_thickness_thin">Thin</string>
+    <string name="font_thickness_extra_light">Extra light</string>
+    <string name="font_thickness_light">Light</string>
+    <string name="font_thickness_normal">Normal</string>
+    <string name="font_thickness_medium">Medium</string>
+
+    <!-- Progress Count properties -->
+    <string name="progress_count_percentage">Percentage</string>
+    <string name="progress_count_quantity">Quantity</string>
+
+    <!-- Themes -->
+    <string name="dynamic_theme">Mercury</string>
+    <string name="blue_theme">Neptune</string>
+    <string name="green_theme">Earth</string>
+    <string name="green2_theme">Io</string>
+    <string name="green_gray_theme">Enceladus</string>
+    <string name="red_theme">Mars</string>
+    <string name="red_gray_theme">Callisto</string>
+    <string name="purple_theme">Jupiter</string>
+    <string name="purple_gray_theme">Ceres</string>
+    <string name="pink_theme">Saturn</string>
+    <string name="pink2_theme">Ganymede</string>
+    <string name="lavender_theme">Eris</string>
+    <string name="marsh_theme">Pluto</string>
+    <string name="yellow_theme">Venus</string>
+    <string name="yellow2_theme">Makemake</string>
+    <string name="aqua_theme">Uranus</string>
+    <string name="gray_theme">Iapetus</string>
+
+    <!-- Toast messages -->
+    <string name="press_again_toast">Press back again to exit</string>
+    <string name="books_added">All selected books were successfully added.</string>
+    <string name="books_moved">All selected books were successfully moved.</string>
+    <string name="books_deleted">All selected books were successfully deleted.</string>
+    <string name="cover_image_changed">Cover Image was successfully changed.</string>
+    <string name="cover_image_deleted">Cover Image was successfully deleted.</string>
+    <string name="book_deleted">This book was successfully deleted.</string>
+    <string name="book_moved">This book was successfully moved.</string>
+    <string name="copied">Copied</string>
+    <string name="history_deleted">History was successfully deleted.</string>
+    <string name="cover_reset">Cover image was successfully reset.</string>
+    <string name="title_changed">Title was successfully changed.</string>
+    <string name="author_changed">Author was successfully changed.</string>
+    <string name="description_changed">Description was successfully changed.</string>
+    <string name="path_changed">File path was successfully changed.</string>
+
+    <!-- Snackbar messages -->
+    <string name="history_element_deleted">History element was successfully deleted.</string>
+
+    <!-- BookInfo -->
+    <string name="start_reading">Start</string>
+    <string name="continue_reading_query">Continue from %1$s</string>
+    <string name="file_details">File details</string>
+    <string name="file_path">Path</string>
+    <string name="file_last_opened">Last opened</string>
+    <string name="file_size">Size</string>
+    <string name="unknown">Unknown</string>
+
+    <!-- Reader -->
+    <string name="no_chapters">No chapters</string>
+    <string name="chapters">Chapters</string>
+
+    <!-- About -->
+    <!-- Options -->
+    <string name="app_version_option">App version</string>
+    <string name="report_bug_option">Report a bug</string>
+    <string name="licenses_option">Open source licenses</string>
+    <string name="credits_option">Credits</string>
+    <string name="help_translate_option">Help translate</string>
+    <string name="support_development_option">Support development</string>
+    <string name="contributors_option">Contributors</string>
+    <string name="slava_ukraini">Slava Ukraini!</string>
+    <!-- Badges -->
+    <string name="reddit_badge" translatable="false">Reddit</string>
+    <string name="github_badge" translatable="false">GitHub</string>
+    <string name="gitlab_badge" translatable="false">GitLab</string>
+    <string name="codeberg_badge" translatable="false">Codeberg</string>
+    <string name="tryzub_badge">Tryzub</string>
+
+    <!-- Credits -->
+    <string name="credits_design">Design</string>
+    <string name="credits_icon">Icons</string>
+    <string name="credits_updates">New updates managing</string>
+    <string name="credits_fonts">Fonts</string>
+    <string name="credits_translation">Translation</string>
+    <string name="credits_contribution">Contribution</string>
+    <string name="credits_ideas">Ideas</string>
+
+    <!-- Help -->
+    <string name="help_title_how_to_add_books">How do I add books to the Library?</string>
+    <string name="help_desc_how_to_add_books_1">Go to the</string>
+    <string name="help_desc_how_to_add_books_2">Browse</string>
+    <string name="help_desc_how_to_add_books_3">
+        If you don\'t see downloaded books try to refresh list by pulling it down.
+        Make sure your books has supported file format.
+        Then click the book to select it or hold to show it\'s location.
+        After you selected all books you want, click the checkmark icon in the upper right corner,
+        wait for all books to load and click «Add».
+        Now you should see all books you have added in the
+    </string>
+    <string name="help_desc_how_to_add_books_4">Library</string>
+
+    <string name="help_title_how_to_customize_app">How do I customize the app?</string>
+    <string name="help_desc_how_to_customize_app_1">Go to the</string>
+    <string name="help_desc_how_to_customize_app_2">Settings</string>
+    <string name="help_desc_how_to_customize_app_3">
+        You can do this from the Library, History and Browse screens
+        by clicking three dots in the upper right corner
+        and selecting «Settings» from the drop-down menu.
+        Then you will see all available settings for this app.
+        Feel free to experiment with those!
+    </string>
+
+    <string name="help_title_how_to_move_or_delete_books">How do I move or delete books?</string>
+    <string name="help_desc_how_to_move_or_delete_books_1">Go to the</string>
+    <string name="help_desc_how_to_move_or_delete_books_2">Library</string>
+    <string name="help_desc_how_to_move_or_delete_books_3">
+        Hold down the first book\'s cover image until it is selected,
+        now you can simply click all cover images of books you want to select.
+        You can also select books in multiple categories.
+        After you have chosen all desired books, you can click the arrow icon to move
+        and trash bin icon to delete books.
+    </string>
+
+    <string name="help_title_how_to_edit_book">How do I edit a book?</string>
+    <string name="help_desc_how_to_edit_book_1">Go to the</string>
+    <string name="help_desc_how_to_edit_book_2">Library</string>
+    <string name="help_desc_how_to_edit_book_3">
+        and click the book\'s cover image to see book\'s details.
+        Now you can hold down the book\'s title, author or description to edit it
+        or cover image to change, reset or delete cover image.
+    </string>
+
+    <string name="help_title_how_to_read_book">How do I read a book?</string>
+    <string name="help_desc_how_to_read_book_1">Go to the</string>
+    <string name="help_desc_how_to_read_book_2">Library</string>
+    <string name="help_desc_how_to_read_book_3">
+        To start reading the book click the button in the bottom right corner of the book you want to read.
+        Also you can start reading the book by clicking it\'s cover image
+        to see book\'s details and then click the button in the bottom right corner.
+        The progress will be saved and restored automatically.
+        You can bring top and bottom bars by clicking anywhere on the screen.
+        By clicking the title of the book you will be transferred to the book\'s details.
+        By clicking the gear icon you will see Reader settings.
+        You can use bottom bar\'s slider to change progress.
+    </string>
+
+    <string name="help_title_how_to_customize_reader">How do I customize the Reader?</string>
+    <string name="help_desc_how_to_customize_reader_1">
+        Start reading the book(see: How do I read a book?),
+        after that bring top and bottom bars by clicking anywhere on the screen.
+        Then click the gear icon in the upper right corner.
+        This will show all Reader settings.
+        Second way is to go to the
+    </string>
+    <string name="help_desc_how_to_customize_reader_2">
+        Settings
+    </string>
+    <string name="help_desc_how_to_customize_reader_3">
+        and select Reader category to customize General settings,
+        or Appearance category to customize Colors settings.
+    </string>
+
+    <string name="help_title_how_to_manage_history">How do I manage history?</string>
+    <string name="help_desc_how_to_manage_history_1">Go to the</string>
+    <string name="help_desc_how_to_manage_history_2">History</string>
+    <string name="help_desc_how_to_manage_history_3">
+        By clicking the delete button to the right of the history element, it will be deleted.
+        History affects books order in Library,
+        by deleting history element it will also reorder a book.
+        Last opened book is always the first in Library and History.
+    </string>
+
+    <string name="help_title_how_to_use_tooltip">How do I use tooltips?</string>
+    <string name="help_desc_how_to_use_tooltip_1">
+        Most icon-buttons have tooltips, they can help you if you don\'t know what an icon-button does.
+        To show tooltip you can hold on an icon-button.
+    </string>
+
+    <string name="help_title_how_to_use_double_click_translation">
+        How do I use double click translation?
+    </string>
+    <string name="help_desc_how_to_use_double_click_translation_1">
+        Firstly, go to the Reader settings(see: How do I customize the Reader?),
+        then turn on corresponding setting. After that,
+        start reading the book(see: How do I read a book?).
+        Now if you double click on desired paragraph,
+        external translator will be opened with paragraph\'s text.
+    </string>
+
+    <string name="help_title_how_to_create_color_presets">
+        How do I create and modify color presets?
+    </string>
+    <string name="help_desc_how_to_create_color_presets_1">
+        Go to the Appearance settings(see: How do I customize the Reader?).
+        You can modify all color preset\'s settings in the box under «Color Preset» in «Colors» subcategory.
+        To create a new color preset, click the «Add» icon-button.
+        There are multiple ways to modify a color preset:
+        by clicking the text field you can change the name of the color preset,
+        by moving sliders you can change colors of the color preset,
+        by clicking the «Shuffle» icon-button you can shuffle all colors.
+        If you want to delete color preset, click the «Delete» icon-button.
+    </string>
+
+    <string name="help_title_how_to_use_color_presets">
+        How do I use color presets?
+    </string>
+    <string name="help_desc_how_to_use_color_presets_1">
+        Go to the Appearance settings(see: How do I customize the Reader?).
+        You can choose which color preset to use in «Color Preset» setting.
+        Click the desired color preset to select it, this will also change your colors in Reader.
+        If you want to reorder color preset, select it and hold «Handle» icon-button,
+        then move it to the desired position.
+        You can fast change color presets by enabling corresponding setting
+        in Appearance setting\'s «Colors» subcategory, then swiping top bar left or right in Reader,
+        to fast change color preset.
+    </string>
+
+    <string name="help_title_how_to_use_perception_expander">
+        What is and how do I use perception expander?
+    </string>
+    <string name="help_desc_how_to_use_perception_expander_1">
+        Perception expander may help you read faster.
+        First, enable it in the Reader settings(see: How do I customize the Reader?).
+        Once enabled, two vertical lines will appear on either side of the Reader.
+        To optimize your reading speed further,
+        adjust the margin to create less space around the center.
+        To use it, focus on the center of the screen while
+        allowing your peripheral vision to pick up the text on the sides.
+        As you read, maintain your focus on the center without directly
+        looking at the sides after each line.
+    </string>
+
+
+    <!-- Start -->
+    <!-- Welcome message. %1$s is the application name. -->
+    <string name="start_welcome">Welcome to %1$s!</string>
+    <string name="start_welcome_desc">
+        To a world where words charm,
+        teach and lead on incredible adventures!
+        Let\'s set some things up!
+    </string>
+    <string name="start_language_preferences">Language preferences</string>
+    <string name="start_theme_preferences">Theme preferences</string>
+    <string name="start_scan_preferences">Scan preferences</string>
+    <string name="start_done">Everything is done!</string>
+    <string name="start_done_desc">
+        Setup completed.
+        Would you like to go to the Help screen?
+    </string>
+
+    <!-- History -->
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+
+    <!-- Crash -->
+    <string name="crash_title">Oops! The app crashed.</string>
+    <string name="crash_description">Please report this crash message in the most convenient way for you.</string>
+
+    <!-- Content description -->
+    <string name="continue_reading_content_desc">Continue reading</string>
+    <string name="go_back_content_desc">Go back</string>
+    <string name="cover_image_content_desc">Cover image</string>
+    <string name="open_reader_settings_content_desc">Reader settings</string>
+    <string name="file_icon_content_desc">File</string>
+    <string name="sort_order_content_desc">Sort order</string>
+    <string name="checkbox_content_desc">Checkbox</string>
+    <string name="cover_image_not_found_content_desc">Cover image not found</string>
+    <string name="error_content_desc">Error</string>
+    <string name="search_content_desc">Search</string>
+    <string name="clear_selected_items_content_desc">Clear selected items</string>
+    <string name="add_files_content_desc">Add files</string>
+    <string name="select_all_files_content_desc">Select all files</string>
+    <string name="select_all_books_content_desc">Select all books</string>
+    <string name="exit_search_content_desc">Exit search</string>
+    <string name="delete_whole_history_content_desc">Delete whole history</string>
+    <string name="move_books_content_desc">Move selected books</string>
+    <string name="delete_books_content_desc">Delete selected books</string>
+    <string name="revert_content_desc">Revert</string>
+    <string name="selected_content_desc">Selected</string>
+    <string name="app_icon_content_desc">App icon</string>
+    <string name="delete_history_element_content_desc">Delete history element</string>
+    <string name="library_content_desc">Your library</string>
+    <string name="history_content_desc">Reading history</string>
+    <string name="browse_content_desc">Add books</string>
+    <string name="arrow_content_desc">Arrow</string>
+    <string name="reset_start_content_desc">Reset start guide</string>
+    <string name="open_in_web_content_desc">Open in web</string>
+    <string name="delete_color_preset_content_desc">Delete color preset</string>
+    <string name="create_color_preset_content_desc">Create new color preset</string>
+    <string name="shuffle_color_preset_content_desc">Shuffle colors</string>
+    <string name="drag_content_desc">Drag</string>
+    <string name="filter_content_desc">Filter</string>
+    <string name="checkpoint_back_content_desc">Checkpoint back</string>
+    <string name="checkpoint_forward_content_desc">Checkpoint forward</string>
+    <string name="chapters_content_desc">Chapters</string>
+    <string name="more_content_desc">More</string>
+    <string name="pin_content_desc">Pin</string>
+    <string name="show_less_content_desc">Show less</string>
+    <string name="show_more_content_desc">Show more</string>
+    <string name="edit_content_desc">Edit</string>
+    <string name="expand_content_desc">Expand</string>
+    <string name="collapse_content_desc">Collapse</string>
+    <string name="remove_content_desc">Remove</string>
+    <string name="note_content_desc">Note</string>
+
+    <!-- Server -->
+    <string name="server_settings">Server</string>
+    <string name="server_settings_desc">Sign in to your own ebook library</string>
+    <string name="server_url_option">Server address</string>
+    <string name="server_url_placeholder">http://192.168.1.20:8787</string>
+    <string name="server_url_option_desc">For example http://192.168.1.20:8787</string>
+    <string name="server_url_not_set">Not set</string>
+    <string name="server_username_label">Username</string>
+    <string name="server_password_label">Password</string>
+    <string name="server_login_action">Sign in</string>
+    <string name="server_check_action">Test connection</string>
+    <string name="server_logout_action">Sign out</string>
+    <string name="server_signed_in">Signed in</string>
+    <string name="server_ok">Server is reachable</string>
+    <string name="server_signed_out">Signed out</string>
+    <string name="server_signed_in_as">Signed in as %1$s (%2$s)</string>
+    <string name="server_failed">That didn\'t work</string>
+    <string name="server_error_credentials">Wrong username or password</string>
+    <string name="server_error_locked">Too many failed attempts, try again later</string>
+    <string name="server_error_signed_out_now">Session expired — sign in again</string>
+    <string name="server_error_address">The address must start with http:// or https://</string>
+    <string name="server_error_unreachable">Cannot reach the server</string>
+    <string name="server_error_upgrade">The server wants a newer version of this app</string>
+    <string name="server_http_warning">Plain http:// is allowed so a phone on your own network can reach the server. Switch to https:// as soon as it is reachable from outside your home.</string>
+    <string name="server_shelf_title">Library on the server</string>
+    <string name="server_shelf_desc">Titles and covers appear in your library on their own. The file is only fetched when you tap one.</string>
+    <string name="server_shelf_empty">The server returned no books.</string>
+    <string name="server_download_action">Download</string>
+    <string name="server_download_all_action">Download everything</string>
+    <string name="library_missing_from_server">Still on the server: %1$d</string>
+    <string name="server_download_in_queue">In the queue: %1$d</string>
+    <string name="server_download_queued">Queued</string>
+    <string name="server_download_failed">Failed — tap to retry</string>
+    <string name="server_not_downloaded">Not downloaded</string>
+    <string name="server_download_content_desc">Download this book</string>
+    <string name="server_downloading">Downloading %1$d%%</string>
+    <string name="server_book_in_library">In your library</string>
+    <string name="server_book_added">Added to your library</string>
+    <string name="delete_cloud">Delete from server</string>
+    <string name="delete_cloud_book">Delete on the server too?</string>
+    <string name="delete_cloud_book_description">The book is removed from the server and from this device. The server keeps the files for a while before reclaiming them, so an accidental delete can still be recovered there during that window.</string>
+    <string name="delete_cloud_failed">The server did not delete the book</string>
+
+    <string name="profile_title">You</string>
+    <string name="profile_account_section">Account</string>
+    <string name="profile_server">Server</string>
+    <string name="profile_username">Username</string>
+    <string name="profile_display_name">Display name</string>
+    <string name="profile_role">Role</string>
+    <string name="profile_sign_out">Sign out</string>
+    <string name="profile_shelves_section">Server shelves</string>
+    <string name="profile_shelves_description">Pull the shelves from the server and file the books on this device into them. Local shelves the server does not have are kept.</string>
+    <string name="profile_shelves_sync">Sync shelves</string>
+    <string name="profile_shelves_syncing">Syncing…</string>
+    <string name="profile_shelves_sync_done">%1$d shelves on the server · %2$d new · %3$d books filed</string>
+    <string name="profile_shelves_sync_done_matched">%1$d shelves on the server · %2$d new · %3$d books filed · %4$d matched by content</string>
+    <string name="profile_books_section">New books on the server</string>
+    <string name="profile_books_description">Check the server\'s catalogue for books this device is missing, or holds an older copy of. Nothing is downloaded until you say so.</string>
+    <string name="profile_books_check">Check for new books</string>
+    <string name="profile_books_checking">Checking…</string>
+    <string name="profile_books_up_to_date">Everything on the server is already here, and up to date.</string>
+    <string name="profile_books_dialog_title">Take these?</string>
+    <string name="profile_books_dialog_description">%1$d new · %2$d updated. New books are filed into the library; updated ones replace the local copy in place and keep the reading position.</string>
+    <string name="profile_books_dialog_later">Later</string>
+    <string name="profile_books_badge_new">NEW</string>
+    <string name="profile_books_badge_updated">UPDATED</string>
+    <string name="profile_not_signed_in">Not signed in yet. Sign in from Settings → Server.</string>
+    <string name="profile_reading_section">Reading time</string>
+    <string name="profile_reading_today">Today</string>
+    <string name="profile_reading_total">Total</string>
+    <string name="profile_reading_less">Less than a minute</string>
+    <string name="profile_reading_minutes"> min</string>
+    <string name="profile_reading_hours"> h </string>
+    <string name="profile_password_section">Change password</string>
+    <string name="profile_password_current">Current password</string>
+    <string name="profile_password_new">New password (at least 10 characters)</string>
+    <string name="profile_password_confirm">Repeat the new password</string>
+    <string name="profile_password_submit">Change password</string>
+    <string name="profile_password_changed">Password changed. Other devices were signed out.</string>
+    <string name="profile_password_current_missing">Enter the current password first</string>
+    <string name="profile_password_too_short">The new password needs at least 10 characters</string>
+    <string name="profile_password_same">The new password must differ from the current one</string>
+    <string name="profile_password_mismatch">The two new passwords do not match</string>
+    <string name="library_book_edit_title">Edit title</string>
+    <string name="library_book_edit_author">Edit author</string>
+    <string name="library_book_pin">Pin to top</string>
+    <string name="library_book_unpin">Unpin</string>
+    <string name="library_book_move">Move to a shelf</string>
+    <string name="library_book_delete_local">Delete from this device</string>
+    <string name="library_book_select_multiple">Select multiple</string>
+    <string name="library_delete_local_title">Delete from this device only?</string>
+    <string name="library_delete_local_description">%1$s is removed from this device. If it came from a server, that copy stays and the shelf will show it as not downloaded again.</string>
+
+    <string name="reader_menu_contents">Contents</string>
+    <string name="reader_menu_brightness">Brightness</string>
+    <string name="reader_menu_night">Night</string>
+    <string name="reader_menu_settings">Settings</string>
+    <string name="previous_chapter">Previous chapter</string>
+    <string name="next_chapter">Next chapter</string>
+    <string name="add_bookmark">Add bookmark</string>
+    <string name="remove_bookmark">Remove bookmark</string>
+    <string name="bookmark_added">Bookmark added</string>
+    <string name="bookmark_removed">Bookmark removed</string>
+    <string name="bookmarks">Bookmarks</string>
+    <string name="no_bookmarks">No bookmarks yet</string>
+    <string name="full_text_search">Full-text search</string>
+    <string name="search_in_book_hint">Search in this book</string>
+    <string name="search_no_results">No matches found</string>
+    <string name="search_results">%1$d results</string>
+    <string name="reader_more_options_content_desc">More options</string>
+</resources>

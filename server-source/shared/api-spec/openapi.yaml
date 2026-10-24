@@ -1,0 +1,2206 @@
+openapi: 3.1.0
+info:
+  title: ebookd API
+  version: 0.2.0
+  description: |
+    Wire contract for the ebookd library server. **This file is the source of truth** for what
+    the Android app may rely on.
+
+    Rules (see docs/02-API.md):
+      * Additive changes only inside `/api/v1`: new optional fields, new endpoints, new enum
+        members. Clients must ignore unknown JSON keys and map unknown enum values to a
+        fallback rather than failing.
+      * Removing or renaming anything requires a new `/api/v2` mount served side by side.
+      * `GET /api/v1/meta` advertises capability flags; the app hides UI behind a missing flag
+        instead of probing an endpoint and handling the 404.
+      * Success bodies are the bare resource. There is no `{ data }` envelope. Failures are
+        always `ErrorEnvelope` with a code from `ErrorCode` (a closed set).
+servers:
+  - url: http://127.0.0.1:8787
+    description: default loopback dev instance
+tags:
+  - name: system
+    description: discovery and operational endpoints
+  - name: auth
+    description: sign-in, session rotation, own profile and devices
+  - name: users
+    description: administrator-level account management
+  - name: library
+    description: ingest, browsing and the shared catalogue
+  - name: files
+    description: byte-range delivery and covers
+  - name: sync
+    description: reading progress, bookmarks and delta sync
+
+# Everything requires a bearer token unless an operation restates `security: []`. This is the
+# deny-by-default rule; a route that forgets its guard is still expected to fail closed.
+security:
+  - bearer: []
+
+paths:
+  /api/v1/meta:
+    get:
+      tags: [system]
+      operationId: getMeta
+      summary: Capability and limit discovery
+      description: |
+        Public and unauthenticated on purpose — the app must be able to ask "what is this
+        server" before it has credentials, and must learn the server's clock to timestamp
+        last-write-wins sync records correctly.
+      security: []
+      parameters:
+        - name: X-App-Version-Code
+          in: header
+          required: false
+          description: Calling app's versionCode. Sets `upgradeRequired` when below `minAppVersionCode`.
+          schema:
+            type: integer
+            minimum: 0
+      responses:
+        '200':
+          description: Discovery document.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Meta'
+
+  /health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Liveness probe (performs no I/O)
+      security: []
+      responses:
+        '200':
+          description: Process is alive.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /ready:
+    get:
+      tags: [system]
+      operationId: getReady
+      summary: Readiness probe
+      security: []
+      responses:
+        '200':
+          description: Ready to serve.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+  /api/v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Sign in and start a device lineage
+      security: []
+      responses:
+        '200':
+          description: Credentials issued.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionGrant' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+        '429': { $ref: '#/components/responses/Error' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/LoginRequest' }
+
+  /api/v1/auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refresh
+      summary: Rotate a refresh token
+      description: >
+        Single-use. The response replaces the submitted token; presenting a token that was
+        already rotated means the lineage was copied or replayed, and the server revokes every
+        session descended from the same sign-in.
+      security: []
+      responses:
+        '200':
+          description: New credential pair.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionGrant' }
+        '401': { $ref: '#/components/responses/Error' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+
+  /api/v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: End a lineage; idempotent by design
+      security: []
+      responses:
+        '204': { description: The credential will not work again, whether or not it was live. }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+
+  /api/v1/auth/me:
+    get:
+      tags: [auth]
+      operationId: getSelf
+      summary: Who I am and what I may do
+      responses:
+        '200':
+          description: Current identity.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/MeResponse' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [auth]
+      operationId: updateSelf
+      summary: Change own username, display name, email or reader preferences
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProfileRequest' }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/PublicUser' }
+        '401': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/me/password:
+    post:
+      tags: [auth]
+      operationId: changeOwnPassword
+      summary: Change own password, keeping this session and dropping the others
+      responses:
+        '200':
+          description: Changed.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [otherSessionsRevoked]
+                properties:
+                  otherSessionsRevoked: { type: integer }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 10 }
+
+  /api/v1/auth/devices:
+    get:
+      tags: [auth]
+      operationId: listDevices
+      summary: This account's live sessions and paired devices
+      responses:
+        '200':
+          description: Device list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                      required: [id, kind, current, createdAt, expiresAt]
+                      properties:
+                        id: { $ref: '#/components/schemas/Id' }
+                        kind: { type: string, enum: [session, device, api] }
+                        current: { type: boolean }
+        '401': { $ref: '#/components/responses/Error' }
+
+  /api/v1/auth/devices/{id}:
+    delete:
+      tags: [auth]
+      operationId: revokeDevice
+      summary: Sign one device out
+      description: A device belonging to someone else answers 404, never 403.
+      parameters:
+        - $ref: '#/components/parameters/DeviceId'
+      responses:
+        '204': { description: Revoked. }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/users:
+    get:
+      tags: [users]
+      operationId: listUsers
+      summary: Paginated user list
+      x-required-capability: user:manage
+      parameters:
+        - { name: query, in: query, schema: { type: string } }
+        - { name: role, in: query, schema: { type: string, enum: [admin, user] } }
+        - { name: status, in: query, schema: { type: string, enum: [active, disabled] } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: offset, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+      responses:
+        '200':
+          description: Users.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UserList' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+    post:
+      tags: [users]
+      operationId: createUser
+      summary: Create an account
+      description: >
+        `initialPassword` is echoed once because this build has no email transport; the admin is
+        the only channel that ever sees it, and the account is flagged to change it.
+      x-required-capability: user:manage
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatedUser' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+    get:
+      tags: [users]
+      operationId: getUser
+      x-required-capability: user:manage
+      responses:
+        '200':
+          description: One user.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user, capabilities, devices]
+                properties:
+                  user: { $ref: '#/components/schemas/PublicUser' }
+                  capabilities:
+                    type: array
+                    items: { $ref: '#/components/schemas/Capability' }
+                  devices: { type: integer }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [users]
+      operationId: updateUser
+      x-required-capability: user:manage
+      description: Refuses to demote, disable or delete the last active administrator.
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [user]
+                properties:
+                  user: { $ref: '#/components/schemas/PublicUser' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [users]
+      operationId: deleteUser
+      x-required-capability: user:manage
+      description: >
+        Removes credentials and sessions but keeps the books that user uploaded: the library is
+        shared, and closing an account must not destroy content.
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/users/{id}/password:
+    post:
+      tags: [users]
+      operationId: resetUserPassword
+      x-required-capability: user:manage
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Reset; every session of that user is revoked.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionsRevoked]
+                properties:
+                  sessionsRevoked: { type: integer }
+        '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/users/{id}/tokens/revoke:
+    post:
+      tags: [users]
+      operationId: revokeUserTokens
+      x-required-capability: user:manage
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: Sessions ended.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessionsRevoked]
+                properties:
+                  sessionsRevoked: { type: integer }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/uploads:
+    post:
+      tags: [library]
+      operationId: uploadBook
+      summary: Ingest one ebook file
+      description: |
+        `multipart/form-data` with a single file part plus optional text fields. Text fields
+        arrive *before* the file part, so a client that relies on the file being first will find
+        `mode` and `bookId` ignored. Exactly one file per request.
+
+        When the incoming filename is already shelved under a live book and the bytes are new, the
+        first request is answered `409 filename_conflict` with the clashing book in `details` and
+        nothing is stored. The client then re-sends the same file with a `conflict` decision:
+        `replace` puts the new bytes into the book that held the old file and drops the old file
+        row (same shelf, same progress), `skip` stores nothing, and `rename` also puts the new
+        bytes into that book as its primary file but keeps the old file row under a numbered
+        name (`三体 (1).txt`). An explicit `mode` or `bookId` skips the question entirely — the
+        caller already said where the bytes go.
+      x-required-capability: file:upload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                mode: { type: string, enum: [auto, create, attach, replace], default: auto }
+                bookId: { $ref: '#/components/schemas/Id' }
+                conflict:
+                  type: string
+                  enum: [replace, skip, rename]
+                  description: >
+                    Answer to a `filename_conflict` from a previous attempt with the same file.
+                    Ignored when there is no clash.
+                charset:
+                  type: string
+                  description: Forces a TXT codepage instead of trusting detection.
+      responses:
+        '201':
+          description: Stored and described.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/UploadReceipt' }
+        '200':
+          description: The decision was `skip`; nothing was stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [skipped, filename]
+                properties:
+                  skipped: { type: boolean, enum: [true] }
+                  filename: { type: string }
+                  uploadId: { $ref: '#/components/schemas/Id' }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '409':
+          description: >
+            Either these exact bytes are already shelved (`duplicate_content`), or this filename
+            is already taken and no `conflict` decision was sent (`filename_conflict`).
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+        '507': { $ref: '#/components/responses/Error', description: 'Account quota would be exceeded.' }
+
+  /api/v1/uploads/{id}:
+    get:
+      tags: [library]
+      operationId: getUpload
+      summary: Status of a past upload by this user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: Receipt.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [id, filename, status]
+                properties:
+                  id: { $ref: '#/components/schemas/Id' }
+                  filename: { type: string }
+                  status: { type: string }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/import/dir:
+    post:
+      tags: [library]
+      operationId: importDirectory
+      summary: Bulk-import a directory the server can already read
+      description: |
+        The NAS path: a library folder usually already sits on the share, and posting thousands of
+        files over HTTP to fill it in is absurd. The requested path is resolved *inside* the
+        configured import directory and anything escaping it is refused, since otherwise this
+        endpoint would move files the operator never meant to import.
+
+        By default files are *moved* into the content-addressed store. With `link: true` they stay
+        where they are: the library records the path, the bytes remain the user's, and the source
+        folder is never written to — which is what a read-only mount requires, and what makes
+        cataloguing an existing collection cost no disk space.
+      x-required-capability: library:edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [path]
+              properties:
+                path: { type: string, maxLength: 1000 }
+                dryRun: { type: boolean, default: false }
+                limit: { type: integer, minimum: 1, maximum: 5000, default: 500 }
+                link:
+                  type: boolean
+                  default: false
+                  description: >
+                    Catalogue in place instead of moving. The file is never modified or deleted by
+                    the server, including when the book is deleted or the retention sweeper runs.
+      responses:
+        '200':
+          description: Scan and import summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [scanned, imported]
+                properties:
+                  scanned: { type: integer }
+                  imported: { type: integer }
+                  bytes: { type: integer }
+                  failed:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+        '403': { $ref: '#/components/responses/Error' }
+
+  /api/v1/books:
+    get:
+      tags: [library]
+      operationId: listBooks
+      summary: Browse, search and filter the catalogue
+      description: |
+        One request carries everything the shelf needs, including the caller's own progress, so a
+        phone does not issue a follow-up per visible cover. Pagination is keyset with an opaque
+        signed cursor: an OFFSET would shift rows when someone else uploads, and would get slower
+        per page. A cursor issued for a different sort or order is rejected rather than honoured,
+        because replaying it against new ordering silently skips or repeats books.
+      x-required-capability: library:read
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+        - { name: format, in: query, schema: { type: string }, description: 'Comma-separated BookFormat list.' }
+        - { name: tag, in: query, schema: { type: string }, description: 'Comma-separated; all must match.' }
+        - { name: notTag, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string }, description: Materialized path prefix; includes the subtree. }
+        - { name: seriesId, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: collection, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: contributor, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: language, in: query, schema: { type: string, maxLength: 12 } }
+        - { name: status, in: query, schema: { type: string, enum: [none, reading, finished, abandoned, on_hold] } }
+        - { name: needsReview, in: query, schema: { type: boolean } }
+        - { name: missingCover, in: query, schema: { type: boolean } }
+        - { name: minYear, in: query, schema: { type: integer } }
+        - { name: maxYear, in: query, schema: { type: integer } }
+        - name: sort
+          in: query
+          description: |
+            `shelf` is the book's position inside the collection named by `collection`; it is
+            refused with `validation_failed` otherwise, because that column belongs to a table only
+            a collection query joins.
+          schema:
+            type: string
+            enum: [addedAt, title, author, year, lastRead, progress, size, shelf]
+            default: addedAt
+        - { name: order, in: query, schema: { type: string, enum: [asc, desc], default: desc } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 400 } }
+      responses:
+        '200':
+          description: A page of books.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookPage' }
+        '400': { $ref: '#/components/responses/Error', description: 'A cursor that does not match this sort/order, or is not ours.' }
+        '401': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/books/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Id' }
+    get:
+      tags: [library]
+      operationId: getBook
+      summary: One book with its files, collections and the caller's own state
+      responses:
+        '200':
+          description: Detail.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [book, files]
+                additionalProperties: true
+                properties:
+                  book:
+                    type: object
+                    additionalProperties: true
+                    required: [id, title]
+                    properties:
+                      id: { $ref: '#/components/schemas/Id' }
+                      title: { type: string }
+                      authors:
+                        type: array
+                        description: >
+                          Display-order names, from the same `book_contributors` join the browse list
+                          uses. Present in the detail response as well as the summary so a client no
+                          longer has to keep the list row around to learn who wrote a book.
+                        items: { type: string }
+                  files:
+                    type: array
+                    description: >
+                      Every format held for the book. Each entry's `id` is the immutable download
+                      key; replacing a file yields a new id rather than changing this one.
+                    items:
+                      type: object
+                      additionalProperties: true
+                      required: [id, format, size_bytes, sha256]
+                      properties:
+                        id: { $ref: '#/components/schemas/Id' }
+                        format: { $ref: '#/components/schemas/BookFormat' }
+                        size_bytes: { type: integer }
+                        sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+                        charset:
+                          type:
+                            - string
+                            - 'null'
+                        drm: { type: integer }
+                        is_primary: { type: integer }
+        '404': { $ref: '#/components/responses/Error' }
+    patch:
+      tags: [library]
+      operationId: updateBook
+      summary: Edit shared metadata; edited fields become pinned
+      description: >
+        Fields set here are recorded as pinned, so a later re-parse of the file will not overwrite
+        them. Without that, re-importing a messy file silently undoes whatever the operator fixed.
+      x-required-capability: library:edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+              properties:
+                authors:
+                  type:
+                    - array
+                    - 'null'
+                  description: >
+                    Replaces the `author` role rows only — a translator or illustrator the container
+                    declared is left alone. Absent means "not editing authors", so an empty array is a
+                    real edit that clears them. Setting it pins `authors`, which is what makes a later
+                    re-parse keep the hand-typed names instead of the file's.
+                  items: { type: string }
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [book]
+                additionalProperties: true
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [library]
+      operationId: deleteBook
+      summary: Soft-delete one book
+      description: |
+        The same tombstone `POST /api/v1/books/batch/delete` writes, for the case that needs no
+        selection: the book leaves every listing at once, its file stays readable for the retention
+        window, the sweeper reclaims the bytes afterwards, and `/sync/delta` hands the tombstone
+        to every device.
+
+        A book that is already gone answers `404 book_not_found` rather than an idempotent 204 —
+        "it was there and now is not" and "it was never there" are different answers, and a stale
+        tab must not believe it just deleted something.
+      x-required-capability: book:delete
+      responses:
+        '204': { description: Tombstoned. }
+        '401': { $ref: '#/components/responses/Error' }
+        '403': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/categories:
+    get:
+      tags: [library]
+      operationId: listCategories
+      summary: The category tree, flattened with materialized paths
+      x-required-capability: library:read
+      responses:
+        '200':
+          description: Categories.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CategoryList' }
+    post:
+      tags: [library]
+      operationId: createCategory
+      x-required-capability: library:edit
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [category]
+                additionalProperties: true
+        '409': { $ref: '#/components/responses/Error', description: 'A category with that name already exists at this level.' }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/categories/reorder:
+    post:
+      tags: [library]
+      operationId: reorderCategories
+      summary: Rewrite the order of one shelf level
+      description: >-
+        Takes the whole level in its new order, not a single moved id: positions are dense, so a
+        one-row patch would collide with a sibling or leave a gap. `parentId: null` orders the root
+        shelves, which is the order the app's tabs use. Idempotent — the same request twice is a
+        no-op.
+      x-required-capability: library:edit
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ids]
+              additionalProperties: true
+              properties:
+                parentId:
+                  type: [string, 'null']
+                  description: The shelf whose sub-shelves are being ordered; null for the roots.
+                ids:
+                  type: array
+                  items: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: Reordered.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [reordered]
+                additionalProperties: true
+                properties:
+                  reordered: { type: integer }
+        '422': { $ref: '#/components/responses/Error' }
+
+  /api/v1/categories/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Id' }
+    patch:
+      tags: [library]
+      operationId: updateCategory
+      summary: Rename or re-parent a category
+      description: A category cannot be moved inside its own subtree; the subtree would detach.
+      x-required-capability: library:edit
+      responses:
+        '200':
+          description: Updated.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [category]
+                additionalProperties: true
+        '422': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [library]
+      operationId: deleteCategory
+      summary: Delete a category, keeping its children and its books
+      description: >
+        Children are re-parented rather than deleted, because a category is navigation and removing
+        a subtree of labels is not what "delete this folder" should mean. Books are uncategorised by
+        default; `cascade-to-parent` moves them up instead.
+      x-required-capability: library:edit
+      parameters:
+        - { name: mode, in: query, schema: { type: string, enum: [orphan, cascade-to-parent], default: orphan } }
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/tags:
+    get:
+      tags: [library]
+      operationId: listTags
+      summary: Tags by usage, optionally filtered by name
+      x-required-capability: library:read
+      parameters:
+        - { name: q, in: query, schema: { type: string, maxLength: 200 } }
+      responses:
+        '200':
+          description: Tags.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: true
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Tag' }
+    post:
+      tags: [library]
+      operationId: createTag
+      x-required-capability: library:edit
+      responses:
+        '201': { description: Created, or the existing tag when the normalized name matches. }
+
+  /api/v1/tags/merge:
+    post:
+      tags: [library]
+      operationId: mergeTags
+      summary: Fold several tags into one
+      description: >
+        A book carrying both a source and the target ends with a single membership; the merge runs
+        in one transaction so a duplicate primary key cannot leave it half applied.
+      x-required-capability: library:edit
+      responses:
+        '200':
+          description: Merge summary.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [merged, books]
+                properties:
+                  merged: { type: integer }
+                  books: { type: integer }
+
+  /api/v1/tags/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Id' }
+    delete:
+      tags: [library]
+      operationId: deleteTag
+      x-required-capability: library:edit
+      responses:
+        '204': { description: Deleted, and removed from every book. }
+
+  /api/v1/collections:
+    get:
+      tags: [library]
+      operationId: listCollections
+      summary: The caller's collections plus every shared one
+      x-required-capability: library:read
+      responses:
+        '200':
+          description: Collections.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: true
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/Collection' }
+    post:
+      tags: [library]
+      operationId: createCollection
+      summary: Create a personal collection, or a shared one with collections:global
+      responses:
+        '201': { description: Created. }
+        '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
+
+  /api/v1/collections/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Id' }
+    patch:
+      tags: [library]
+      operationId: updateCollection
+      responses:
+        '200': { description: Updated. }
+        '403': { $ref: '#/components/responses/Error', description: "Belongs to someone else, or is shared and the caller lacks collections:global." }
+        '404': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [library]
+      operationId: deleteCollection
+      description: Soft delete, so another device is told it is gone instead of seeing it reappear.
+      responses:
+        '204': { description: Deleted. }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /api/v1/collections/{id}/books:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema: { $ref: '#/components/schemas/Id' }
+    get:
+      tags: [library]
+      operationId: listCollectionBooks
+      summary: Books in the collection's own order
+      x-required-capability: library:read
+      responses:
+        '200':
+          description: Ordered books.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: true
+    put:
+      tags: [library]
+      operationId: addCollectionBooks
+      summary: Add books, appended after the existing order
+      description: >
+        Positions are appended beyond the current maximum rather than computed from the array index,
+        so adding to a hand-ordered shelf does not silently renumber the books already on it.
+      responses:
+        '200': { description: Add summary. }
+        '403': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [library]
+      operationId: removeCollectionBooks
+      responses:
+        '200': { description: Removal summary. }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /api/v1/collections/{id}/order:
+    patch:
+      tags: [library]
+      operationId: reorderCollection
+      summary: Rewrite the manual order
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: Reorder summary. }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /api/v1/books/batch/tag:
+    post:
+      tags: [library]
+      operationId: batchTag
+      summary: Add and remove tags across a selection
+      x-required-capability: library:edit
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+
+  /api/v1/books/batch/collection:
+    post:
+      tags: [library]
+      operationId: batchCollection
+      summary: Add and remove a selection to and from collections
+      x-required-capability: library:edit
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+
+  /api/v1/books/batch/category:
+    post:
+      tags: [library]
+      operationId: batchCategory
+      summary: Move a selection into one category, or out of all of them
+      x-required-capability: library:edit
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+
+  /api/v1/books/batch/status:
+    post:
+      tags: [library]
+      operationId: batchStatus
+      summary: Set the caller's own shelf and reading status for a selection
+      description: >
+        Writes only the caller's `user_book_states`, so it needs library:read rather than
+        library:edit — marking your own books as finished is not an edit to the shared record.
+      x-required-capability: library:read
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+
+  /api/v1/books/batch/update:
+    post:
+      tags: [library]
+      operationId: batchUpdate
+      summary: Apply the same metadata values to a selection
+      x-required-capability: library:edit
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+
+  /api/v1/books/batch/delete:
+    post:
+      tags: [library]
+      operationId: batchDelete
+      summary: Soft-delete a selection
+      description: >
+        The rows survive as tombstones so /sync/delta can tell offline devices the books are gone,
+        and the files stay readable for the retention window so an in-flight download is not
+        corrupted by the delete.
+      x-required-capability: batch:delete
+      requestBody: { $ref: '#/components/requestBodies/Batch' }
+      responses:
+        '200': { $ref: '#/components/responses/BatchOutcome' }
+        '403': { $ref: '#/components/responses/Error' }
+
+  /api/v1/progress/{bookId}:
+    put:
+      tags: [sync]
+      operationId: putProgress
+      summary: Record this device's reading position
+      description: |
+        Stored per (user, file, device) as well as merged into the user's state. Two devices in
+        different chapters must not overwrite each other, and a position measured against one file
+        version is meaningless against another — which is why the client is expected to send the
+        file it was reading.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: The merged state and the rev it was written at.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ProgressWrite' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/progress:
+    get:
+      tags: [sync]
+      operationId: listProgress
+      summary: What this user is reading, most recent first
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [none, reading, finished, abandoned, on_hold] } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 200, default: 50 } }
+      responses:
+        '200':
+          description: Progress list.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: true
+
+  /api/v1/bookmarks:
+    get:
+      tags: [sync]
+      operationId: listBookmarks
+      summary: Bookmarks for a book, or every change since a rev
+      description: |
+        Deleted bookmarks are returned with `deleted_at` set. Filtering them out here would leave an
+        offline device that never learns about the deletion still showing the bookmark.
+      parameters:
+        - { name: bookId, in: query, schema: { $ref: '#/components/schemas/Id' } }
+        - { name: since, in: query, schema: { type: integer, minimum: 0 } }
+      responses:
+        '200':
+          description: Bookmarks.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/BookmarkList' }
+    post:
+      tags: [sync]
+      operationId: createBookmark
+      summary: Create or update a bookmark
+      description: The id may be client-generated, so a bookmark made offline keeps its identity.
+      responses:
+        '201':
+          description: Stored.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bookmark]
+                additionalProperties: true
+
+  /api/v1/bookmarks/{id}:
+    delete:
+      tags: [sync]
+      operationId: deleteBookmark
+      summary: Tombstone a bookmark
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '204': { description: Tombstoned. }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/sync/delta:
+    get:
+      tags: [sync]
+      operationId: syncDelta
+      summary: Everything that changed after a rev
+      description: |
+        The rev is a server-assigned per-user counter, not a timestamp. Device clocks are wrong by
+        minutes and go backwards when corrected, so ordering by them silently discards whichever
+        position was actually newer.
+      parameters:
+        - { name: cursor, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 1000, default: 500 } }
+      responses:
+        '200':
+          description: Changes and the cursor to resume from.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncDelta' }
+
+  /api/v1/sync/push:
+    post:
+      tags: [sync]
+      operationId: syncPush
+      summary: Apply an offline client's changes
+      description: |
+        Each change carries the rev it was based on. A stale base is reported as a conflict rather
+        than applied, because the honest resolution for a stale reading position depends on which
+        one is further along — and only the client knows what the user was actually looking at.
+      responses:
+        '200':
+          description: Applied changes and conflicts.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SyncPushResult' }
+
+  /api/v1/sync/offline-manifest:
+    get:
+      tags: [sync]
+      operationId: offlineManifest
+      summary: Everything a fresh device needs to become useful offline
+      description: >
+        One document carrying the shelf, the cover URLs and a download entry per file. Sending it as
+        a single response is what keeps first launch off an N+1 pattern of one request per book.
+      responses:
+        '200':
+          description: Manifest.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/OfflineManifest' }
+
+  /api/v1/files/{fileId}/download:
+    get:
+      tags: [files]
+      operationId: downloadFile
+      summary: The original file, with byte-range support
+      description: |
+        The `fileId` is immutable and is the cache key: replacing a book's file inserts a new row
+        rather than pointing the old one at new content, so a device that downloaded this id
+        yesterday and resumes it today receives the same bytes.
+
+        Clients must send `If-Range` with the ETag when resuming. The server answers 200 with the
+        whole file if it does not match, which a downloader should treat as "start over" — a 206
+        against a mismatched validator is how a half-old, half-new file gets assembled, and that
+        file opens cleanly and is silently wrong.
+      x-required-capability: library:read
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+        - name: Range
+          in: header
+          required: false
+          description: Single byte range. A multi-range request is answered with the whole file.
+          schema: { type: string, example: 'bytes=0-1048575' }
+        - name: If-Range
+          in: header
+          required: false
+          description: The ETag the client's partial file was taken from.
+          schema: { type: string }
+        - name: If-None-Match
+          in: header
+          required: false
+          schema: { type: string }
+      responses:
+        '200': { $ref: '#/components/responses/FilePayload' }
+        '206': { $ref: '#/components/responses/FilePayload' }
+        '304': { description: The client already holds this version. }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '416': { $ref: '#/components/responses/Error', description: 'Range outside the file; Content-Range states the true size.' }
+    head:
+      tags: [files]
+      operationId: headFile
+      summary: Headers only, for a size and hash pre-flight
+      x-required-capability: library:read
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: Headers, no body. }
+
+  /api/v1/files/{fileId}/stream:
+    get:
+      tags: [files]
+      operationId: streamFile
+      summary: The file inline, for a reader or a WebView
+      description: Same validators and range behaviour as `download`; only `Content-Disposition` differs.
+      x-required-capability: library:read
+      parameters:
+        - name: fileId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200': { description: The whole file. }
+        '206': { description: The requested slice. }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/books/{bookId}/epub:
+    get:
+      tags: [files]
+      operationId: getEpubChapters
+      summary: A book's EPUB cut into chapters
+      description: >
+        The spine defines "a chapter" in an EPUB, and the split happens server-side so a browser
+        does not have to unzip the container. Each chapter's `html` is rebuilt from a whitelist of
+        tags with all text escaped — nothing from the file's own markup is passed through — which
+        is what makes it safe to render in the admin page. Images are dropped: they live inside the
+        archive behind an authenticated endpoint.
+      x-required-capability: library:read
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: The chapters, in reading order.
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                required: [bookId, fileId, chapters, totalChars, truncated]
+                properties:
+                  bookId: { $ref: '#/components/schemas/Id' }
+                  fileId: { $ref: '#/components/schemas/Id' }
+                  chapters:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+                      required: [title, html, chars]
+                      properties:
+                        title: { type: string }
+                        html:
+                          type: string
+                          description: Whitelisted blocks only (h1–h6, p, blockquote, ul/ol/li, pre, em/strong/code, br, hr).
+                        chars:
+                          type: integer
+                          description: Text length, which is the unit the reader's progress uses.
+                  totalChars:
+                    type: integer
+                    description: Sum of every chapter's `chars`; the denominator for progress.
+                  truncated:
+                    type: boolean
+                    description: True when the book exceeded the chapter or length cap and its tail was dropped.
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '422':
+          description: The archive could not be read — typically encrypted (DRM) or damaged.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+
+  /api/v1/covers/{bookId}:
+    get:
+      tags: [files]
+      operationId: getCover
+      summary: The cover, preferring the caller's own override
+      description: >
+        A per-user cover override takes precedence over the shared one, so the same book renders
+        differently per reader. That is why the response is `private`: an intermediary must not hand
+        one user's cover to another.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '200':
+          description: The image.
+          content:
+            image/*:
+              schema: { type: string, format: binary }
+        '304': { description: Unchanged. }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/books/{bookId}/cover:
+    post:
+      tags: [files]
+      operationId: setCoverOverride
+      summary: The reader's own cover for one book
+      description: >
+        A picture, not a book, so the body is capped well below the upload limit and the cap is
+        reported with the number in it. Only the magic bytes are checked: a server that resampled
+        covers would need a graphics library for the whole product's sake, and the answer to an ugly
+        cover has always been "the reader replaces it". The override belongs to the caller alone —
+        `GET /covers/{bookId}` prefers it for this user and nobody else — and writing it takes a
+        revision on the caller's own row, which is how a second device learns to re-fetch the cover.
+        It leaves the reading state stored beside it untouched.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [cover]
+              properties:
+                cover: { type: string, format: binary }
+      responses:
+        '201':
+          description: Stored, and now what this caller is served.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [bookId, coverUrl, mediaType, sizeBytes, sha256, updatedAt]
+                properties:
+                  bookId: { $ref: '#/components/schemas/Id' }
+                  coverUrl:
+                    type: string
+                    description: Relative, like every other cover URL; never a host the client must trust.
+                  mediaType: { type: string }
+                  sizeBytes: { type: integer }
+                  sha256:
+                    type: string
+                    description: The stored blob's hash, which is also what the cover's ETag is derived from.
+                  updatedAt: { type: string, format: date-time }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+        '413': { $ref: '#/components/responses/Error' }
+        '415': { $ref: '#/components/responses/Error' }
+    delete:
+      tags: [files]
+      operationId: clearCoverOverride
+      summary: Back to the library's own cover
+      description: >
+        204 whether or not an override was set. From the reader's side the two cases look identical,
+        and a "you had nothing to clear" error would turn a menu item into a state machine.
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema: { $ref: '#/components/schemas/Id' }
+      responses:
+        '204': { description: Cleared, or already clear. }
+        '401': { $ref: '#/components/responses/Error' }
+        '404': { $ref: '#/components/responses/Error' }
+
+  /api/v1/stats:
+    get:
+      tags: [system]
+      operationId: getStats
+      summary: What the library actually holds, broken down by format
+      description: >
+        The shape matters more than the total: "932 GB" is not actionable, "932 GB, of which 89 GB is
+        one duplicated format" is. Rows that are soft-deleted are counted separately rather than
+        hidden, because their blobs may still occupy the volume inside the retention window.
+      x-required-capability: library:read
+      responses:
+        '200':
+          description: Counts and byte totals.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LibraryStats' }
+
+  /api/v1/audit-logs:
+    get:
+      tags: [system]
+      operationId: listAuditLogs
+      summary: Who did what
+      description: Admin-only. Deliberately not scoped to the caller's own actions — the reason to read this is to find out what somebody else did.
+      x-required-capability: audit:read
+      parameters:
+        - { name: action, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: targetType, in: query, schema: { type: string, maxLength: 100 } }
+        - { name: limit, in: query, schema: { type: integer, minimum: 1, maximum: 500, default: 50 } }
+      responses:
+        '200':
+          description: Recent entries, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                additionalProperties: true
+                properties:
+                  items:
+                    type: array
+                    items: { $ref: '#/components/schemas/AuditEntry' }
+        '403': { $ref: '#/components/responses/Error' }
+
+components:
+  requestBodies:
+    Batch:
+      required: true
+      description: |
+        A selection plus the change to apply. Every batch endpoint accepts `dryRun` and reports
+        per-id results, because "42 changed" cannot answer which of the selected books did not —
+        and a book that another device deleted between selection and submission is expected, not
+        exceptional.
+      content:
+        application/json:
+          schema:
+            type: object
+            additionalProperties: true
+            required: [bookIds]
+            properties:
+              bookIds:
+                type: array
+                minItems: 1
+                maxItems: 2000
+                items: { $ref: '#/components/schemas/Id' }
+              dryRun: { type: boolean, default: false }
+
+  parameters:
+    UserId:
+      name: id
+      in: path
+      required: true
+      description: A 26-character id. A malformed one is rejected as `validation_failed`, not passed to SQL.
+      schema: { $ref: '#/components/schemas/Id' }
+    DeviceId:
+      name: id
+      in: path
+      required: true
+      schema: { $ref: '#/components/schemas/Id' }
+
+  responses:
+    Error:
+      description: Failure. The body always carries a code from `ErrorCode`.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ErrorEnvelope' }
+    FilePayload:
+      description: |
+        File bytes, whole (200) or sliced (206). Every one of these headers is load-bearing for the
+        Android downloader: `ETag` is what `If-Range` is compared against, `X-Content-Sha256` is
+        what the assembled file is verified against, and `Content-Range` is how a resumed segment
+        is placed.
+      headers:
+        Accept-Ranges:
+          schema: { type: string, const: bytes }
+          description: Always present, on 200 as well as 206.
+        ETag:
+          schema: { type: string }
+          description: Strong validator derived from the content hash — not from mtime, which changes without the bytes changing.
+        Content-Length:
+          schema: { type: integer }
+        Content-Range:
+          schema: { type: string }
+          description: On 206 only, e.g. `bytes 0-1048575/838860800`. On 416 it is `bytes */<total>`.
+        Content-Disposition:
+          schema: { type: string }
+          description: RFC 6266/5987, so a Chinese filename survives a download manager.
+        X-Content-Sha256:
+          schema: { type: string, pattern: '^[0-9a-f]{64}$' }
+        X-File-Id:
+          schema: { $ref: '#/components/schemas/Id' }
+        X-Book-Id:
+          schema: { $ref: '#/components/schemas/Id' }
+      content:
+        application/octet-stream:
+          schema: { type: string, format: binary }
+    BatchOutcome:
+      description: Per-id outcome; the whole batch commits in one transaction.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/BatchResult' }
+
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token from `POST /api/v1/auth/login`. Expires in ~15 minutes; refresh it.
+
+  schemas:
+    ProfileRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        username:
+          type: string
+          minLength: 2
+          maxLength: 64
+          pattern: '^[\p{L}\p{N}._@-]+$'
+          description: 2-64 letters, digits or . _ @ -; 409 `already_exists` when taken.
+        displayName: { type: string, minLength: 1, maxLength: 200 }
+        email: { type: [string, 'null'], maxLength: 320 }
+        prefs: { type: object, additionalProperties: true }
+
+    PublicUser:
+      type: object
+      additionalProperties: true
+      required: [id, username, displayName, email, role, status, quotaBytes, mustChangePassword, createdAt, updatedAt]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        username: { type: string }
+        displayName: { type: string }
+        email:
+          type:
+            - string
+            - 'null'
+        role: { type: string, enum: [admin, user] }
+        status: { type: string, enum: [active, disabled] }
+        quotaBytes:
+          type:
+            - integer
+            - 'null'
+        mustChangePassword: { type: boolean }
+        lastLoginAt:
+          type:
+            - string
+            - 'null'
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+
+    LoginRequest:
+      type: object
+      additionalProperties: false
+      required: [username, password]
+      properties:
+        username: { type: string, minLength: 1, maxLength: 200 }
+        password: { type: string, minLength: 1, maxLength: 1024 }
+        device:
+          type: object
+          additionalProperties: true
+          description: >
+            Sent by the app so a sign-in creates a named, individually revocable device.
+            Omitting `id` makes the server mint one; sending it lets the app keep the same
+            device id across sign-ins on the same handset.
+          properties:
+            id: { $ref: '#/components/schemas/Id' }
+            label: { type: [string, 'null'] }
+            platform: { type: string, enum: [android, ios, web, cli, other] }
+            clientVersion: { type: [string, 'null'] }
+
+    SessionGrant:
+      type: object
+      additionalProperties: true
+      required: [accessToken, tokenType, expiresIn, refreshToken, deviceId, user]
+      properties:
+        accessToken: { type: string }
+        tokenType: { type: string, const: Bearer }
+        expiresIn: { type: integer }
+        refreshToken:
+          type: string
+          description: >
+            Opaque, single-use. Every use returns a new one and invalidates the previous;
+            presenting an already-used token revokes the entire lineage for that device.
+        deviceId: { $ref: '#/components/schemas/Id' }
+        user: { $ref: '#/components/schemas/PublicUser' }
+
+    CreatedUser:
+      type: object
+      additionalProperties: true
+      required: [user, initialPassword, mustChangePassword]
+      properties:
+        user: { $ref: '#/components/schemas/PublicUser' }
+        initialPassword:
+          type: string
+          description: Echoed exactly once, in this response only. Never stored or logged.
+        mustChangePassword: { type: boolean }
+
+    SyncDelta:
+      type: object
+      additionalProperties: true
+      required: [items, nextCursor, serverRev, hasMore]
+      properties:
+        items:
+          type: array
+          description: Ordered by rev ascending, so applying them in order is a valid replay.
+          items:
+            type: object
+            additionalProperties: true
+            required: [kind, rev]
+            properties:
+              kind: { type: string, enum: [state, bookmark] }
+              rev: { type: integer }
+              deleted_at:
+                type:
+                  - string
+                  - 'null'
+        nextCursor: { type: integer }
+        serverRev: { type: integer }
+        hasMore: { type: boolean }
+
+    SyncPushResult:
+      type: object
+      additionalProperties: true
+      required: [applied, conflicts, serverRev]
+      properties:
+        applied:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [index, kind, rev]
+        conflicts:
+          type: array
+          description: Changes whose base rev was already superseded; nothing was written for them.
+          items:
+            type: object
+            additionalProperties: true
+            required: [index, kind, serverRev]
+        serverRev: { type: integer }
+
+    ProgressWrite:
+      type: object
+      additionalProperties: true
+      required: [rev, state]
+      properties:
+        rev: { type: integer }
+        state:
+          type: object
+          additionalProperties: true
+
+    Bookmark:
+      type: object
+      additionalProperties: true
+      required: [id, book_id, target_kind, target_value, rev, updated_at]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        book_id: { $ref: '#/components/schemas/Id' }
+        target_kind: { type: string }
+        target_value: { type: string }
+        rev: { type: integer }
+        updated_at: { type: string }
+        deleted_at:
+          type:
+            - string
+            - 'null'
+          description: Set on a tombstone; the row is kept so peers can be told it is gone.
+
+    BookmarkList:
+      type: object
+      additionalProperties: true
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Bookmark' }
+
+    OfflineManifest:
+      type: object
+      additionalProperties: true
+      required: [serverTime, books]
+      properties:
+        serverTime: { type: string, format: date-time }
+        books:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, title, files]
+            properties:
+              id: { $ref: '#/components/schemas/Id' }
+              title: { type: string }
+              coverUrl:
+                type:
+                  - string
+                  - 'null'
+              content_updated_at: { type: string }
+              files:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+                  required: [id, format, size_bytes, sha256]
+                  properties:
+                    id: { $ref: '#/components/schemas/Id' }
+                    format: { $ref: '#/components/schemas/BookFormat' }
+                    size_bytes: { type: integer }
+                    sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+
+    AuditEntry:
+      type: object
+      additionalProperties: true
+      required: [at, action, result]
+      properties:
+        at: { type: string, format: date-time }
+        actor_user_id:
+          type:
+            - string
+            - 'null'
+        action: { type: string }
+        target_type:
+          type:
+            - string
+            - 'null'
+        target_id:
+          type:
+            - string
+            - 'null'
+        book_id:
+          type:
+            - string
+            - 'null'
+        result: { type: string, enum: [ok, denied, error] }
+        ip:
+          type:
+            - string
+            - 'null'
+        request_id:
+          type:
+            - string
+            - 'null'
+
+    LibraryStats:
+      type: object
+      additionalProperties: true
+      required: [books, files, bytes, needsReview]
+      properties:
+        books: { type: integer }
+        deletedBooks:
+          type: integer
+          description: Tombstones kept so offline clients learn the book is gone.
+        files: { type: integer }
+        bytes: { type: integer }
+        needsReview:
+          type: integer
+          description: Books whose title was inferred; the operator's work queue.
+        withoutCover: { type: integer }
+        byFormat:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+            required: [format, files, bytes]
+        users: { type: integer }
+        sessions: { type: integer }
+        categories: { type: integer }
+        collections: { type: integer }
+        tags: { type: integer }
+
+    Category:
+      type: object
+      additionalProperties: true
+      required: [id, name, name_norm, slug, path, position]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        parent_id:
+          type:
+            - string
+            - 'null'
+        name: { type: string }
+        name_norm:
+          type: string
+          description: NFKC, casefolded, punctuation stripped; the uniqueness and dedupe key.
+        slug: { type: string }
+        path:
+          type: string
+          description: |
+            Materialized "/ancestor/…/self/" built from ids. Stored rather than derived so a
+            subtree filter is one prefix scan instead of a recursive query per browse request.
+        position: { type: integer }
+        description:
+          type:
+            - string
+            - 'null'
+        book_count: { type: integer }
+
+    CategoryList:
+      type: object
+      additionalProperties: true
+      required: [items]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/Category' }
+
+    Tag:
+      type: object
+      additionalProperties: true
+      required: [id, name, name_norm, kind, usage_count]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        name: { type: string }
+        name_norm: { type: string }
+        kind: { type: string, enum: [tag, genre, subject] }
+        color:
+          type:
+            - string
+            - 'null'
+        usage_count: { type: integer }
+
+    Collection:
+      type: object
+      additionalProperties: true
+      required: [id, name, kind, is_public, position_mode, created_at, updated_at]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        owner_user_id:
+          type:
+            - string
+            - 'null'
+          description: Null means shared across every account.
+        name: { type: string }
+        kind: { type: string, enum: [collection, smart] }
+        is_public: { type: integer }
+        position_mode: { type: string, enum: [manual, added, title] }
+        description:
+          type:
+            - string
+            - 'null'
+        book_count: { type: integer }
+
+    BatchResult:
+      type: object
+      additionalProperties: true
+      required: [requested, changed, applied, skipped, dryRun]
+      properties:
+        requested: { type: integer }
+        changed:
+          type: array
+          description: One entry per requested id, in request order.
+          items:
+            type: object
+            additionalProperties: true
+            required: [id, ok]
+            properties:
+              id: { $ref: '#/components/schemas/Id' }
+              ok: { type: boolean }
+              error:
+                type: string
+                description: Present when ok is false, e.g. book_not_found for a stale selection.
+        applied: { type: integer }
+        skipped: { type: integer }
+        dryRun: { type: boolean }
+
+    BookSummary:
+      type: object
+      additionalProperties: true
+      required: [id, title, authors, formats, hasCover, coverUrl, updatedAt, contentUpdatedAt, sizeBytes, fileCount, needsReview, my]
+      properties:
+        id: { $ref: '#/components/schemas/Id' }
+        title: { type: string }
+        authors:
+          type: array
+          items: { type: string }
+        seriesName:
+          type:
+            - string
+            - 'null'
+        seriesIndex:
+          type:
+            - number
+            - 'null'
+        year:
+          type:
+            - integer
+            - 'null'
+        language:
+          type:
+            - string
+            - 'null'
+        categoryId:
+          type:
+            - string
+            - 'null'
+          description: >-
+            The shelf this book sits in, or null when unfiled. Optional so a client that does not
+            sync shelves keeps working; when present it is the only link between a book and the
+            category tree.
+        formats:
+          type: array
+          description: Every format held for this book, so the shelf can badge a download size.
+          items: { $ref: '#/components/schemas/BookFormat' }
+        hasCover: { type: boolean }
+        coverUrl:
+          type:
+            - string
+            - 'null'
+          description: Relative path, or null when no cover exists; never a broken image URL.
+        coverUpdatedAt:
+          type:
+            - string
+            - 'null'
+          description: >-
+            When the cover bytes last changed — ingest, a redraw after a metadata edit, or a
+            replacement. The URL is stable, so this is the stamp clients append as a
+            cache-buster; without it an edited title keeps showing the old tile.
+        updatedAt: { type: string }
+        contentUpdatedAt:
+          type: string
+          description: Bumped when the bytes or the cover change; the cache key for the app.
+        sizeBytes: { type: integer }
+        fileCount: { type: integer }
+        needsReview:
+          type: boolean
+          description: True when the title was inferred from the filename rather than read from the file.
+        my:
+          type: object
+          additionalProperties: true
+          required: [status, percent, lastReadAt]
+          description: The caller's own reading state, joined in the same query.
+          properties:
+            status:
+              type:
+                - string
+                - 'null'
+            percent:
+              type:
+                - number
+                - 'null'
+            lastReadAt:
+              type:
+                - string
+                - 'null'
+
+    BookPage:
+      type: object
+      additionalProperties: true
+      required: [items, nextCursor, hasMore, limit, sort, order]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/BookSummary' }
+        nextCursor:
+          type:
+            - string
+            - 'null'
+          description: Null on the last page. Opaque and signed; not for display or construction.
+        hasMore: { type: boolean }
+        limit: { type: integer }
+        sort: { type: string }
+        order: { type: string }
+
+    UploadReceipt:
+      type: object
+      additionalProperties: true
+      required: [uploadId, bookId, fileId, blobId, format, title, created, deduped]
+      properties:
+        uploadId: { $ref: '#/components/schemas/Id' }
+        bookId: { $ref: '#/components/schemas/Id' }
+        fileId: { $ref: '#/components/schemas/Id' }
+        blobId: { $ref: '#/components/schemas/Id' }
+        format: { $ref: '#/components/schemas/BookFormat' }
+        title: { type: string }
+        created:
+          type: boolean
+          description: False when the file was attached to a book that already existed.
+        deduped:
+          type: boolean
+          description: True when these bytes were already stored for another book.
+        matchedBy:
+          type:
+            - string
+            - 'null'
+          enum: [sha256, title-author, null]
+          description: How an existing book was recognised. Absent of a guess means a new book.
+        book:
+          type: object
+          additionalProperties: true
+          required: [needsReview]
+          properties:
+            needsReview:
+              type: boolean
+              description: True when the title was inferred rather than read from the file.
+            warnings:
+              type: array
+              items: { type: string }
+
+    UserList:
+      type: object
+      additionalProperties: true
+      required: [items, total, limit, offset]
+      properties:
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/PublicUser' }
+        total: { type: integer }
+        limit: { type: integer }
+        offset: { type: integer }
+
+    MeResponse:
+      type: object
+      additionalProperties: true
+      required: [user, capabilities, deviceId, serverTime]
+      properties:
+        user: { $ref: '#/components/schemas/PublicUser' }
+        capabilities:
+          type: array
+          description: Resolved set for this caller. The app hides features behind membership rather than inferring from role.
+          items: { $ref: '#/components/schemas/Capability' }
+        deviceId: { $ref: '#/components/schemas/Id' }
+        storageQuotaBytes:
+          type:
+            - integer
+            - 'null'
+        serverTime: { type: string, format: date-time }
+        allowRegistration: { type: boolean }
+
+    Capability:
+      type: string
+      enum:
+        - library:read
+        - library:edit
+        - user:manage
+        - file:upload
+        - file:delete
+        - book:delete
+        - batch:delete
+        - collections:global
+        - settings:write
+        - audit:read
+        - storage:manage
+
+    Id:
+      type: string
+      pattern: '^[0-9A-HJKMNP-TV-Z]{26}$'
+      description: Sortable 26-character ULID (Crockford base32). Case-insensitive input is not accepted.
+
+    Meta:
+      type: object
+      additionalProperties: true
+      required:
+        - apiVersion
+        - serverVersion
+        - revision
+        - protocol
+        - minAppVersionCode
+        - upgradeRequired
+        - serverTime
+        - features
+        - formats
+        - limits
+      properties:
+        apiVersion:
+          type: string
+          const: v1
+        serverVersion:
+          type: string
+          description: Semver of the running server.
+        revision:
+          type:
+            - string
+            - 'null'
+          description: Build identifier, or null when built outside a git checkout.
+        protocol:
+          type: integer
+          description: Bumped only on breaking wire changes; a mismatch is fatal for the client.
+        minAppVersionCode:
+          type: integer
+        upgradeRequired:
+          type: boolean
+        serverTime:
+          type: string
+          format: date-time
+          description: Used by clients to measure clock offset before stamping sync records.
+        features:
+          type: object
+          description: Capability flags. An absent flag means hide the feature, not handle a 404.
+          additionalProperties:
+            type: boolean
+          properties:
+            rangeDownloads: { type: boolean }
+            contentHashIntegrity: { type: boolean }
+            batchShelf: { type: boolean }
+            customCovers: { type: boolean }
+            progressSync: { type: boolean }
+            offlineManifest: { type: boolean }
+            serverThumbnails: { type: boolean }
+            opds: { type: boolean }
+            allowRegistration: { type: boolean }
+        formats:
+          type: object
+          required: [accepted, renderable]
+          properties:
+            accepted:
+              type: array
+              description: Formats the server will store and serve.
+              items: { $ref: '#/components/schemas/BookFormat' }
+            renderable:
+              type: array
+              description: Subset the current Android reader opens natively.
+              items: { $ref: '#/components/schemas/BookFormat' }
+        limits:
+          type: object
+          required: [maxUploadBytes, maxBatchSize]
+          properties:
+            maxUploadBytes: { type: integer }
+            maxBatchSize: { type: integer }
+
+    BookFormat:
+      type: string
+      description: |
+        Closed set as far as clients are concerned — a client must still tolerate an unfamiliar
+        value by falling back to an "unsupported format" affordance.
+      enum:
+        - epub
+        - txt
+        - pdf
+        - mobi
+        - azw
+        - azw3
+        - kfx
+        - fb2
+        - cbz
+        - docx
+        - doc
+        - htmlz
+        - unknown
+
+    ErrorCode:
+      type: string
+      description: |
+        Machine-readable failure reason. Append-only: the app switches on these, so a value is
+        never renamed or reused for something else.
+      enum:
+        - bad_request
+        - unauthorized
+        - invalid_credentials
+        - invalid_refresh
+        - token_reused
+        - forbidden
+        - capability_denied
+        - account_disabled
+        - account_locked
+        - not_found
+        - book_not_found
+        - file_not_found
+        - user_not_found
+        - collection_not_found
+        - category_not_found
+        - method_not_allowed
+        - conflict
+        - duplicate_content
+        - duplicate_book
+        - filename_conflict
+        - already_exists
+        - revision_conflict
+        - unsupported_media_type
+        - range_not_satisfiable
+        - payload_too_large
+        - uri_too_long
+        - unprocessable
+        - validation_failed
+        - too_many_requests
+        - insufficient_storage
+        - upgrade_required
+        - internal
+        - storage_unavailable
+
+    ErrorEnvelope:
+      type: object
+      required: [error]
+      additionalProperties: false
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code: { $ref: '#/components/schemas/ErrorCode' }
+            message: { type: string }
+            details:
+              type: object
+              additionalProperties: true
+            requestId: { type: string }

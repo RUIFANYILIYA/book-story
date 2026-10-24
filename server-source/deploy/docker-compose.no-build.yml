@@ -1,0 +1,62 @@
+# GUI-only deployment: the same service as docker-compose.yml, but with the `build:` block removed
+# so nothing here needs a toolchain or a reachable registry. Use it when the image arrived as a file
+# (`docker load -i ebookd-0.1.0-image.tar.gz`, or a NAS Docker UI's image-import button) rather than
+# being built on the spot.
+#
+#   docker load -i ebookd-0.1.0-image.tar.gz
+#   docker compose -f deploy/docker-compose.no-build.yml up -d
+#
+# Same named volumes and the same `deploy/.env` as docker-compose.yml, so switching between the two
+# does not move any data — but do not run both at once, they are the same project.
+name: ebookd
+
+services:
+  ebookd:
+    image: ebookd:0.2.0
+    container_name: ebookd
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${EBOOK_BIND:-0.0.0.0}:${EBOOK_PORT:-8787}:8787"
+    environment:
+      NODE_ENV: production
+      EBOOK_PORT: "8787"
+      EBOOK_HOST: 0.0.0.0
+      EBOOK_DATA_DIR: /data/db
+      EBOOK_LIBRARY_DIR: /data/library
+      EBOOK_IMPORT_DIR: /data/library/imports
+      EBOOK_JWT_SECRET: "${EBOOK_JWT_SECRET:?set EBOOK_JWT_SECRET in deploy/.env — see .env.example}"
+      EBOOK_MASTER_KEY: "${EBOOK_MASTER_KEY:?set EBOOK_MASTER_KEY in deploy/.env — see .env.example}"
+      EBOOK_ADMIN_USER: "${EBOOK_ADMIN_USER:-admin}"
+      EBOOK_ADMIN_PASSWORD: "${EBOOK_ADMIN_PASSWORD:-}"
+      EBOOK_ALLOW_REGISTRATION: "${EBOOK_ALLOW_REGISTRATION:-false}"
+      EBOOK_MAX_UPLOAD_MB: "${EBOOK_MAX_UPLOAD_MB:-512}"
+      EBOOK_FILE_RETENTION_DAYS: "${EBOOK_FILE_RETENTION_DAYS:-7}"
+      EBOOK_SWEEP_INTERVAL_HOURS: "${EBOOK_SWEEP_INTERVAL_HOURS:-6}"
+      EBOOK_TRUST_PROXY: "${EBOOK_TRUST_PROXY:-false}"
+      EBOOK_LOG_LEVEL: "${EBOOK_LOG_LEVEL:-info}"
+      TZ: "${TZ:-Asia/Shanghai}"
+    volumes:
+      - ebookd_db:/data/db
+      - ebookd_library:/data/library
+      - ebookd_imports:/data/library/imports
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:8787/api/v1/meta').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  ebookd_db:
+  ebookd_library:
+  ebookd_imports:

@@ -1,0 +1,23 @@
+{
+    "id": "07-utf16le",
+    "splitMode": "AUTO",
+    "charset": "UTF-16LE",
+    "chapters": [
+        {
+            "title": "第一章 起风",
+            "level": 1,
+            "startChar": 0
+        },
+        {
+            "title": "第二章 落雨",
+            "level": 1,
+            "startChar": 68
+        },
+        {
+            "title": "第三章 转晴",
+            "level": 1,
+            "startChar": 128
+        }
+    ],
+    "chapterCount": 3
+}
