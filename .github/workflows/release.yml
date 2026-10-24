@@ -3,6 +3,11 @@
 #
 #   git tag v0.3.0 && git push --tags
 #
+# 版本约定（一条发布线）：App 与服务端共用同一个版本号和同一个 tag，
+# 一个 Release 同时覆盖两端。镜像 tag 用的就是这个 git tag，所以
+# ghcr.io/ruifanyiliya/ebookd:v0.3.0 里的版本号与 Release 号一致。
+# App 安装包暂需手动附到同一个 Release（签名密钥不进 CI），以后可接自动构建。
+#
 # 依次做三件事：
 #   1. verify   —— 完整跑一遍服务端验证（类型/契约/325 测试/冒烟），不过不放行
 #   2. image    —— buildx 构建 linux/amd64 镜像，推 ghcr.io，并导出离线 tar.gz
@@ -92,6 +97,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
-          name: ebookd ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
           generate_release_notes: true
           files: ebookd-image.tar.gz
+          body: |
+            一条发布线：本 Release 同时覆盖 App 与服务端。
+
+            - 服务端镜像（NAS 直接拉取升级）：`ghcr.io/ruifanyiliya/ebookd:${{ github.ref_name }}`
+            - 服务端离线包：下方 `ebookd-image.tar.gz`（内网 NAS 导入用）
+            - App 安装包：如本版有 App 改动，请把 apk 手动附到本 Release

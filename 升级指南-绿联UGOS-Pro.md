@@ -320,6 +320,7 @@ docker cp /volume1/你的书目录/. ebookd:/data/library/imports/
 - 内网/断网的 NAS 继续用老办法：Release 里自动生成的 `ebookd-image.tar.gz`，解压后导入
 - 每次只推确切版本号的 tag，**不要依赖 `latest`**——升级时机你自己控制
 - 建议**不要**给 NAS 装 Watchtower 之类的自动更新：书库服务的升级要你确认过再动
+- **版本约定（一条发布线）**：App 与服务端共用一个版本号和同一个 tag，一个 Release 覆盖两端，镜像 tag 与 Release 号一致
 
 ---
 

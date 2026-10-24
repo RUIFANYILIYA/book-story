@@ -52,6 +52,20 @@ book-story-20261024/
 
 代码推送到 `main` 会自动跑 CI（类型检查 / 契约检查 / 325 测试 / 冒烟 / 阅读引擎测试）；打 `v*` tag（如 `v0.3.0`）会自动构建 `linux/amd64` 镜像推到 **`ghcr.io/ruifanyiliya/ebookd:<tag>`**，并把离线 tar.gz 附到 GitHub Release。之后 NAS 升级可以不走 tar 导入，把 compose 里 `image:` 换成 ghcr 地址重新部署即可——详见 `升级指南-绿联UGOS-Pro.md` 第 7-4 节。
 
+### 版本约定：一条发布线
+
+App 与服务端**共用同一个版本号和同一个 tag**，一个 Release 同时覆盖两端（例如 `v0.3.0` 同时是 App 1.8.8 之后的下一版，也是服务端 0.2.0 之后的下一版）。镜像 tag 与 Release 号永远一致。
+
+### 发版清单
+
+```bash
+git push                                    # 1. 推送代码（CI 自动验证）
+git tag v0.3.0 && git push --tags           # 2. 打 tag：自动验证 → 构建镜像推 ghcr → 生成 tar.gz Release
+```
+
+3. 如果本版有 App 改动：把 `app-source/app/build/outputs/apk/release/app-release.apk` 拖进同一个 Release
+4. NAS 升级：compose 的 `image:` 换成 `ghcr.io/ruifanyiliya/ebookd:v0.3.0` → 重新部署
+
 ## 构建
 
 **服务端**（需要 Node 24）：
