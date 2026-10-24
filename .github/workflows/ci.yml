@@ -1,0 +1,89 @@
+# ============================================================================
+# CI：每次 push 到 main / 每个 PR 自动验证
+#
+# 注意：本仓库是“交付包”结构，服务端源码在 server-source/ 子目录里。
+# GitHub Actions 只识别仓库根目录的 .github/workflows/，所以本文件在根目录，
+# 各 job 用 working-directory 指回 server-source。
+# （server-source/.github/workflows/ci.yml 是上游单仓库结构的遗留，不生效。）
+# ============================================================================
+name: verify
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  server:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server-source/package-lock.json
+      - run: npm ci --no-audit --fund=false
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Wire contract is in sync with the spec
+        run: npm run contract:check
+      - name: Unit tests
+        run: npm run test
+      - name: Build production artifact
+        run: npm run build -w server
+      - name: Smoke test the built artifact
+        run: npm run smoke -w server
+
+  # The Android modules are gated out of settings.gradle.kts when no SDK is present, so this job
+  # proves the reading engine (chapter splitting, pagination) stays pure JVM and testable cheaply.
+  engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server-source/android
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: wrapper
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+      - name: engine-core tests (pure Kotlin/JVM, no Android framework)
+        run: ./gradlew :engine-core:test --console=plain
+
+  # A container image that cannot be built is not a deliverable: this job runs the same
+  # `npm ci --omit=dev` the image runs, and asserts no native binary is required at install
+  # time — the whole "zero native dependencies" premise of the design, checked on every push.
+  image-dependencies:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server-source/package-lock.json
+      - name: Production install must pull no build tools
+        run: npm ci --omit=dev --no-audit --fund=false
+      - name: Assert the runtime tree contains no prebuilt native modules
+        run: |
+          set -euo pipefail
+          found=$(find node_modules -name '*.node' -print -quit || true)
+          if [ -n "$found" ]; then
+            echo "Unexpected native runtime dependency:"; find node_modules -name '*.node'
+            exit 1
+          fi
+          echo "OK: zero native modules in the production dependency tree"

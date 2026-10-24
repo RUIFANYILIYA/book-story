@@ -297,6 +297,32 @@ docker cp /volume1/你的书目录/. ebookd:/data/library/imports/
 
 ---
 
+## 7-4. 备选升级方式：从 GitHub 自动构建的镜像拉取（ghcr.io）
+
+代码已上传 GitHub 并配了自动发布：给仓库打 `v*` tag 后，GitHub Actions 会自动跑完整测试、构建 `linux/amd64` 镜像推到 `ghcr.io/ruifanyiliya/ebookd:<tag>`，同时把离线 tar.gz 附到 Release。**以后升级可以不走「导 tar」这条路**：
+
+1. 本地推送代码并打 tag（在电脑上，项目目录里）：
+   ```bash
+   git push
+   git tag v0.3.0 && git push --tags
+   ```
+2. 等 GitHub Actions 跑完（仓库页面 → Actions，约 3–5 分钟；测试不过不会出镜像）
+3. NAS 上：Docker → 项目 → 编辑 ebookd 项目的 compose，把 `image:` 一行改成
+   ```yaml
+   image: ghcr.io/ruifanyiliya/ebookd:v0.3.0   # 注意把 tag 换成你刚打的
+   ```
+   ⚠️ 是 `ghcr.io/ruifanyiliya/ebookd`（用户名全小写），别漏了 `ghcr.io/` 前缀
+4. 重新部署。Docker 会自动从 ghcr.io 拉镜像，不用再导 tar
+
+几点说明：
+
+- **镜像里没有密钥**，公开拉取无安全顾虑；JWT / MASTER_KEY 仍然只在 compose 环境变量里
+- 内网/断网的 NAS 继续用老办法：Release 里自动生成的 `ebookd-image.tar.gz`，解压后导入
+- 每次只推确切版本号的 tag，**不要依赖 `latest`**——升级时机你自己控制
+- 建议**不要**给 NAS 装 Watchtower 之类的自动更新：书库服务的升级要你确认过再动
+
+---
+
 ## 8. 排障
 | 现象 | 处理 |
 |---|---|

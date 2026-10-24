@@ -1,0 +1,97 @@
+# ============================================================================
+# 发布：打 v* tag 时自动执行
+#
+#   git tag v0.3.0 && git push --tags
+#
+# 依次做三件事：
+#   1. verify   —— 完整跑一遍服务端验证（类型/契约/325 测试/冒烟），不过不放行
+#   2. image    —— buildx 构建 linux/amd64 镜像，推 ghcr.io，并导出离线 tar.gz
+#   3. release  —— 自动创建/更新 GitHub Release，把 tar.gz 作为附件
+#
+# 之后 NAS 升级：项目 compose 的 image: 换成
+#   ghcr.io/ruifanyiliya/ebookd:<tag>   → 重新部署（自动拉镜像，无需导 tar）
+# 内网/离线环境继续用 Release 里的 tar.gz 导入，两条路都留着。
+#
+# 安全说明：镜像内不含任何密钥（JWT/MASTER_KEY 全部走 compose 环境变量），
+# 公开拉取没有泄露风险。
+# ============================================================================
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # 创建 Release 并上传附件
+  packages: write   # 推送镜像到 ghcr.io
+
+env:
+  # ghcr.io 的镜像路径要求全小写（GitHub 用户名是大写，这里必须转小写）
+  IMAGE: ghcr.io/ruifanyiliya/ebookd
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server-source
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: server-source/package-lock.json
+      - run: npm ci --no-audit --fund=false
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Wire contract is in sync with the spec
+        run: npm run contract:check
+      - name: Unit tests
+        run: npm run test
+      - name: Build production artifact
+        run: npm run build -w server
+      - name: Smoke test the built artifact
+        run: npm run smoke -w server
+
+  image:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: 登录 ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 构建并推送镜像（linux/amd64）
+        uses: docker/build-push-action@v6
+        with:
+          # lockfile 在 server-source/ 根，build context 必须是它（见 Dockerfile 注释）
+          context: server-source
+          file: server-source/server/Dockerfile
+          platforms: linux/amd64
+          push: true
+          load: true # 同时留在本地 daemon，供下一步 docker save 导出离线包
+          # 关闭 attestation：老版本 Docker 拉不到带 provenance 的镜像（部分 NAS 内核较旧）
+          provenance: false
+          tags: ${{ env.IMAGE }}:${{ github.ref_name }}
+
+      - name: 导出离线镜像包（tar.gz）
+        run: |
+          docker save "$IMAGE:$GITHUB_REF_NAME" | gzip -1 > ebookd-image.tar.gz
+          ls -lh ebookd-image.tar.gz
+
+      - name: 创建 Release 并上传附件
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ebookd ${{ github.ref_name }}
+          generate_release_notes: true
+          files: ebookd-image.tar.gz

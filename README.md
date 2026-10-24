@@ -48,6 +48,10 @@ book-story-20261024/
 
 细节、回滚、排障见 `升级指南-绿联UGOS-Pro.md`。
 
+## 自动构建与发布（GitHub Actions）
+
+代码推送到 `main` 会自动跑 CI（类型检查 / 契约检查 / 325 测试 / 冒烟 / 阅读引擎测试）；打 `v*` tag（如 `v0.3.0`）会自动构建 `linux/amd64` 镜像推到 **`ghcr.io/ruifanyiliya/ebookd:<tag>`**，并把离线 tar.gz 附到 GitHub Release。之后 NAS 升级可以不走 tar 导入，把 compose 里 `image:` 换成 ghcr 地址重新部署即可——详见 `升级指南-绿联UGOS-Pro.md` 第 7-4 节。
+
 ## 构建
 
 **服务端**（需要 Node 24）：
